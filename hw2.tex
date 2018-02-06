@@ -1,0 +1,124 @@
+\documentclass[12pt]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Math
+\usepackage{fancyhdr} 
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+%\usepackage{dsfont}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Macros
+\usepackage{calc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Commands and Custom Variables	
+\newcommand{\problem}[1]{\hspace{-4 ex} \large \textbf{Problem #1} }
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\sint}{\text{s}\kern-5pt\int}
+\newcommand{\powerset}{\mathcal{P}}
+\renewenvironment{proof}{\hspace{-4 ex} \emph{Proof}:}{\qed}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\CC}{\mathbb{C}}
+\renewcommand{\Re}{\operatorname{Re}}
+\renewcommand{\Im}{\operatorname{Im}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%page
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+%\doublespacing
+\allowdisplaybreaks
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Shaw \space \thepage}
+\setlength\parindent{0pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Code
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+	language=Python,
+	showstringspaces=false,
+	formfeed=newpage,
+	tabsize=4,
+	commentstyle=\itshape,
+	basicstyle=\ttfamily,
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Images
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{float}
+
+%tikz
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Hyperlinks
+%\usepackage{hyperref}
+%\hypersetup{
+%	colorlinks=true,
+%	linkcolor=blue,
+%	filecolor=magenta,      
+%	urlcolor=cyan,
+%}
+
+\begin{document}
+	\thispagestyle{empty}
+	
+	\begin{flushright}
+		Sage Shaw \\
+		m566 - Spring 2018 \\
+		\today
+	\end{flushright}
+	
+{\large \textbf{HW - Chapter 7}}\bigbreak
+
+\problem{5 (a)} From the text, the eigenvalues of the matrix $A$ are 
+$$\lambda_{l,m} = 4 - 2 \big( \cos(l \pi h) + \cos(m \pi h) \big)$$
+where $1 \leq l,m \leq N$ and $h = \frac{1}{N+1}$. Note that these are all positive values, and thus $A$ is not just symmetric, but SPD. Then $\norm{A}_2 = \rho(A) = \lambda_{\text{max}}$ and $\norm{A^{-1}}_2 = \rho(A^{-1}) = \lambda_{\text{min}}$. \break
+
+Since the argument to each Cosine function in the formula above is between $0$ and $\pi$ we know that it will be increasing as each $l$ and $m$ increase. Thus the largest eigenvalue will be given by the largest values of $l$ and $m$ and the smallest eigenvalue will be given by the smallest values of $l$ and $m$. Thus 
+\begin{align*}
+	\lambda_\text{max} & = 4 - 2 \big( \cos(N \pi h) + \cos(N \pi h) \big) \\
+	& = 4 - 4 \cos\left(\frac{N }{N+1}\pi \right) \\
+	\lambda_\text{min} & = 4 - 2 \big( \cos(1 \pi h) + \cos(1 \pi h) \big) \\
+	& = 4 - 4 \cos\left(\frac{1 }{N+1}\pi \right)
+\end{align*}
+Due to symmetries of Cosine $\cos\left(\frac{N }{N+1}\pi \right) = -\cos\left(\frac{1 }{N+1}\pi \right)$ and we can rewrite
+$$
+\lambda_\text{max} = 4 + 4 \cos\left(\frac{1 }{N+1}\pi \right)
+$$
+Finally we find that the condition number of $A$ is given by
+\begin{align*}
+	\kappa(A) & = \left( 4 + 4 \cos\left(\frac{1 }{N+1}\pi \right) \right) 
+		\left( 4 - 4 \cos\left(\frac{1 }{N+1}\pi \right) \right)^{-1} \\
+	& = \frac{1 + \cos\left(\frac{1 }{N+1}\pi \right)}{ 1 - \cos\left(\frac{1 }{N+1}\pi \right)}
+\end{align*}
+As $N$ gets large, the numerator approaches $2$ and the denominator approaches $0$, thus the condition number gets large. We can verify this by using Taylor Series approximations
+\begin{align*}
+	\frac{1 + \cos(x)}{ 1 - \cos(x)} & \approx \frac{1 + 1 - \frac{x^2}{2}}{1 - 1 + \frac{x^2}{2}} \\
+	& = \frac{2 - \frac{x^2}{2}}{\frac{x^2}{2}} \\
+	& = \frac{4}{x^2} - 1 \\
+	\kappa(A) & \approx \left( \frac{2}{\frac{1}{N+1}\pi} \right)^2 \\
+	& = \left( \frac{2N + 2}{\pi} \right)^2 \\
+	& = \mathcal{O}(N^2) \\
+	& = \mathcal{O}(n)
+\end{align*}
+As expected the condition number scales linearly with the discretization.
+
+
+\end{document}
