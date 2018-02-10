@@ -80,7 +80,7 @@
 	\thispagestyle{empty}
 	
 	\begin{flushright}
-		Sage Shaw \\
+		Daniel Malmuth \& Sage Shaw \\
 		m566 - Spring 2018 \\
 		\today
 	\end{flushright}
@@ -123,6 +123,9 @@ As $N$ gets large, the numerator approaches $2$ and the denominator approaches $
 \end{align*}
 As expected the condition number scales linearly with the discretization.
 
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \problem{5 (b)} Since this problem asks to write code, it will be included here instead of in an appendix.
 \begin{lstlisting}
 def gen_A(N):
@@ -133,6 +136,9 @@ def gen_A(N):
 	A += np.diag(-1*np.ones(n-1), k=-1)
 	A += np.diag(-1*np.ones(n-N), k=N)
 	A += np.diag(-1*np.ones(n-N), k=-N)
+	for i in range(N,n,N):
+		A[i,i-1] = 0
+		A[i-1,i] = 0
 	return A
 
 def residual(x,b):
@@ -149,9 +155,33 @@ def residual(x,b):
 	for i in range(n-N, n-1):
 		r[i] = b[i] + x[i-N] + x[i-1] - 4*x[i] + x[i+1]
 	r[-1] = b[-1] + x[-1-N] + x[-2] - 4*x[-1]
+	for i in range(N,n,N):
+		r[i] -= x[i-1]
+	for i in range(N-1,n-1,N):
+		r[i] -= x[i+1]
 	return r
 
+def jacobi_solve(x, b, tol, max_iter=10**9):
+	n = len(x)
+	N = int(np.sqrt(n))
+	assert N**2 == n
+	assert N>= 3
+	x_old = x
+	r = residual(x_old, b)
+	res_norms = [np.linalg.norm(r)]
+	x_new = x_old + r/4
+	iterations = 1
+	while np.linalg.norm(r) > np.linalg.norm(b)*tol and iterations < max_iter:
+		r = residual(x_new, b)
+		res_norms.append(np.linalg.norm(r))
+		x_new, x_old = x_new + r/4, x_new
+		iterations += 1
+	cond = (1+np.cos(np.pi/(N+1)))/(1-np.cos(np.pi/(N+1)))
+	return x_new, iterations, cond, res_norms
+
 def p5b(N, tol):
+	N=3
+	tol = 10**-5
 	n = N**2
 	x_old = np.ones(n)
 	b = np.ones(n)/(N+1)
@@ -161,44 +191,47 @@ def p5b(N, tol):
 		r = residual(x_new, b)
 		x_new, x_old = x_new + r/4, x_new
 	print(x_new)
-	#test the result by checking the 
-	#	magnitude of the residual
+	#test the result by checking the magnitude of the residual
 	print(np.linalg.norm(b - np.dot(gen_A(N), x_new)))
 	cond = (1+np.cos(np.pi/(N+1)))/(1-np.cos(np.pi/(N+1)))
 	print('The condition number is %g.' % cond)
 \end{lstlisting}
 
-The output for this code ran with $N = 3$ and $\text{tol} = 10^{-8}$ is
+The output for this code ran with $N = 3$ and $\text{tol} = 10^{-8}$ is as expected.
 \begin{lstlisting}
-	>>> p5b(3, 10**-8)
-	[0.23870482 0.31024097 0.3373494  
-	0.39457832 0.41490964 0.39457832 
-	0.3373494  0.31024097 0.23870482]
-	6.08489253834842e-09
+	>>> p5b()
+	[0.17187613 0.21875149 0.17187613 0.21875149 0.28125226 0.21875149
+	0.17187613 0.21875149 0.17187613]
+	5.234360313439405e-06
 	The condition number is 5.82843.
 \end{lstlisting}
 
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \problem{5 (c)} The results for using the Jacobi method for $N = 2^l - 1$ are given below.
-\begin{center}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		$l$&$N$&$n$&iterations required&$\kappa(A)$\\ \hline
-		2&3&9&71&5.828427124746191\\ \hline
-		3&7&49&333&25.274142369088175\\ \hline
-		4&15&225&1389&103.08686891981736\\ \hline
-		5&31&961&5618&414.3450622319052\\ \hline
-	\end{tabular}
-\end{center}
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			$l$&$N$&$n$&iterations required&error at $(0.5,0.5)$&$\kappa(A)$\\ \hline
+			2&3&9&43&3.390e-07&5.828e+00\\ \hline
+			3&7&49&182&7.631e-07&2.527e+01\\ \hline
+			4&15&225&738&9.067e-07&1.031e+02\\ \hline
+			5&31&961&2956&9.722e-07&4.143e+02\\ \hline
+		\end{tabular}
+	\end{center}
+
+
 
 \begin{figure}[H]
-	\caption{n versus K(A)}
+	\caption{$n$ versus $\kappa(A)$}
 	\includegraphics[width=1\textwidth]{hwch7_figure_1}
 	\label{5c1}
 	\centering
 \end{figure}
 
 \begin{figure}[H]
-	\caption{iteration vs norm of the residual}
+	\caption{Jacobi Method Performance $N=31, n=31^2$}
 	\includegraphics[width=1\textwidth]{hwch7_figure_2}
 	\label{5c2}
 	\centering
@@ -206,42 +239,186 @@ The output for this code ran with $N = 3$ and $\text{tol} = 10^{-8}$ is
 
 As expected the condition number scales linearly with $n$ and it takes roughly a constant number of iterations to reduce the norm of the residual by a factor. From the table it seems that the number of iterations required scales linearly with $n$. 
 
-\problem{9 (a)} Using the iteration scheme $x_{k+1} = x_k + \alpha(b-Ax_k)$ the splitting associated would be $A= M-N$ where $M = \alpha I$. Then 
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{9 (a)} Using the iteration scheme $x_{k+1} = x_k + \alpha(b-Ax_k)$ the splitting associated would be $A= M-N$ where $M^{-1} = \alpha I$. Then $M = \frac{1}{\alpha}I$ and
 \begin{align*}
 	T & = I - M^{-1}A \\
-	& = I - \frac{1}{\alpha}IA \\
-	& = I - \frac{1}{\alpha}A
+	& = I - \alpha I A \\
+	& = I - \alpha A
 \end{align*}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \problem{9 (b)} We have a theorem that says that a Stationary Method converges if and only if the spectral radius is less than one. Suppose that $A$ is SPD with eigenvalues $\lambda_1 > \lambda_2 > ... > \lambda_n > 0$. Then $T$ is symmetric. Suppose that $x_k$ is an eigenvector corresponding to the eigenvalue $\lambda_k$. Then
 \begin{align*}
-	Tx_k & = Ix_k - \frac{1}{\alpha}Ax_k \\
-	& = x_k - \frac{\lambda_k}{\alpha}x_k \\
-	& = \left(1-\frac{\lambda_k}{\alpha} \right)x_k
+	Tx_k & = Ix_k - \alpha Ax_k \\
+	& = x_k - \lambda_k \alpha x_k \\
+	& = \left(1- \lambda_k \alpha \right)x_k
 \end{align*}
-Thus each eigenvector of $A$ is also an eigenvector of $T$ corresponding to an eigenvalue of $\left(1-\frac{\lambda_k}{\alpha} \right)$. Since $T$ is symmetric, $\rho(T) = \max\limits_k \{ \left\vert 1-\frac{\lambda_k}{\alpha} \right \vert \}$. In order for the method to converge, we require that this value be less than 1. \bigbreak
+Thus each eigenvector of $A$ is also an eigenvector of $T$ corresponding to an eigenvalue of $\left( 1- \lambda_k \alpha \right)$. Since $T$ is symmetric, $\rho(T) = \max\limits_k \{ \left\vert 1 - \lambda_k \alpha \right \vert \}$. In order for the method to converge, we require that this value be less than 1. \bigbreak
 
 Suppose that $\alpha < 0$. Then we get that 
 $$
--\frac{\lambda_1}{\alpha} > -\frac{\lambda_2}{\alpha} > ... > -\frac{\lambda_n}{\alpha} > 0
+- \lambda_1 \alpha > - \lambda_2 \alpha > ... > - \lambda_n \alpha > 0
 $$
 $$
-1-\frac{\lambda_1}{\alpha} > 1-\frac{\lambda_2}{\alpha} > ... > 1-\frac{\lambda_n}{\alpha} > 1
+1 - \lambda_1 \alpha > 1 - \lambda_2 \alpha > ... > 1 - \lambda_n \alpha > 1
 $$
 and our iterations fail to converge.
 Suppose that $\alpha > 0$. Then
 $$
-1-\frac{\lambda_1}{\alpha} < 1-\frac{\lambda_2}{\alpha} < ... < 1-\frac{\lambda_n}{\alpha} < 1
+1 - \lambda_1 \alpha < 1 - \lambda_2 \alpha < ... > 1 - \lambda_n \alpha < 1
 $$
-As long as $-1 < 1-\frac{\lambda_1}{\alpha}$ this will converge. Solving for $\alpha$ we get our final result: \bigbreak
+As long as $-1 < 1 - \lambda_1 \alpha $ this will converge. Solving for $\alpha$ we get our final result: \bigbreak
 
-The iteration $x_{k+1} = x_k + \alpha(b-Ax_k)$ will converge if and only if $\frac{\lambda_1}{2} < \alpha$ where $\lambda_1$ is the largest eigenvalue of the SPD matrix $A$. \bigbreak
+The iteration $x_{k+1} = x_k + \alpha(b-Ax_k)$ will converge if and only if $\frac{2}{\lambda_1} < \alpha$ where $\lambda_1$ is the largest eigenvalue of the SPD matrix $A$. \bigbreak
 
 To maximize the rate of convergence we need to minimize the spectral radius. This is made simpler by noting that 
 $$
-\rho(T) = \max \left\{  \left\vert 1-\frac{\lambda_1}{\alpha} \right\vert, \left\vert 1 - \frac{\lambda_n}{\alpha}\right\vert \right \}
+\rho(T) = \max \left\{  \left\vert 1- \lambda_1\alpha \right\vert, \left\vert 1 - \lambda_2\alpha\right\vert \right \}
 $$
-since the eigenvalues are indexed in decreasing magnitude. Suppose that $\alpha > \lambda_1$. Then 
+since the eigenvalues are all between these two. Since $1-\lambda_1\alpha < 1 - \lambda_n\alpha$ we really only need to consider
+$$
+\rho(T) = \max \left\{  \lambda_1\alpha - 1 , 1 - \lambda_n\alpha \right \}
+$$
+In addition, since $\lambda_1\alpha - 1$ is increasing with $\alpha$ and $1 - \lambda_n\alpha$ is decreasing with $\alpha$, the $\rho(T)$ will reach a minimum at the intersection point. That is that the value of $\alpha$ that minimizes $\rho(T)$ satisfies
+\begin{align*}
+	\lambda_1\alpha - 1 & = 1 - \lambda_n\alpha \\
+	(\lambda_1 + \lambda_n )\alpha & = 2 \\
+	\alpha & = \frac{2}{\lambda_1 + \lambda_2}
+\end{align*}
+We can find the spectral radius in this case by
+\begin{align*}
+	\rho(T) & = lambda_1\alpha - 1 \\
+	\rho(T) & = 1 - \lambda_n\alpha \\
+	2 \rho(T) & = \alpha(\lambda_1 - \lambda_n) \\
+	2 \rho(T) & = 2 \frac{\lambda_1 - \lambda_n}{\lambda_1 + \lambda_n} \\
+	\rho(T) & = \frac{\kappa(A) - 1}{\kappa(A)+1}
+\end{align*}
+As $\kappa(A)$ gets large $\rho(T)$ approaches $1$ and converges slowly. 
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{9 (c)} The statement in the text is false. If $A$ is strictly diagonally dominant and $\alpha = 1$ the iterative scheme will only converge if $\lambda_1 > 2$
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{13 } The plot of the condition number of $A$ with $n$ is exactly the same as in problem 5 since the condition number does not depend on any method of solving the system. 
+
+Since it was explicitly asked for in this problem, the code used to generate the results appears here instead of in an Appendix.
+
+\begin{lstlisting}
+def A_mult(x):
+	n = len(x)
+	N = int(np.sqrt(n))
+	assert N**2 == n
+	assert N>= 3
+	r = np.zeros(n)
+	r[0] = 4*x[0] - x[1] - x[N]
+	for i in range(1, N):
+		r[i] = -x[i-1] + 4*x[i] - x[i+1] - x[i+N]
+	for i in range(N, n-N):
+		r[i] = -x[i-N] - x[i-1] + 4*x[i] - x[i+1] - x[i+N]
+	for i in range(n-N, n-1):
+		r[i] = -x[i-N] - x[i-1] + 4*x[i] - x[i+1]
+	r[-1] = -x[-1-N] - x[-2] + 4*x[-1]
+	for i in range(N,n,N):
+		r[i] += x[i-1]
+	for i in range(N-1,n-1,N):
+		r[i] += x[i+1]
+	return r
+
+def cg_solve(x, b, tol, max_iter=10**9):
+	n = len(x)
+	N = int(np.sqrt(n))
+	assert N**2 == n
+	assert N>= 3
+	x_old = x
+	r = residual(x_old, b)
+	res_norms = [np.linalg.norm(r)]
+	iterations = 1
+	delta = np.dot(r, r)
+	b_delta = np.dot(b,b)
+	p = r
+	while delta > b_delta * tol**2 and iterations < max_iter:
+		s = A_mult(p)
+		alpha = delta/np.dot(p,s)
+		x_new = x_old + alpha*p
+		r -= alpha * s
+		res_norms.append(np.linalg.norm(r))
+		delta_new = np.dot(r,r)
+		p = r + delta_new/delta * p
+		x_old, delta = x_new, delta_new
+		iterations += 1
+	cond = (1+np.cos(np.pi/(N+1)))/(1-np.cos(np.pi/(N+1)))
+	return x_new, iterations, cond, res_norms
+\end{lstlisting}
+
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			$l$&$N$&$n$&iterations required&error at $(0.5,0.5)$&$\kappa(A)$\\ \hline
+			2&3&9&21&3.339e-07&5.828e+00\\ \hline
+			3&7&49&31&2.267e-07&2.527e+01\\ \hline
+			4&15&225&54&3.442e-08&1.031e+02\\ \hline
+			5&31&961&91&1.761e-07&4.143e+02\\ \hline
+			6&63&3969&165&-2.676e-08&1.659e+03\\ \hline
+		\end{tabular}
+	\end{center}
+		
+
+
+\begin{figure}[H]
+	\caption{Conjugate Gradient Performance $N=31, n=31^2$}
+	\includegraphics[width=1\textwidth]{hwch7_figure_3_cg_N31_2}
+	\label{13c}
+	\centering
+\end{figure}
+
+As $n$ gets larger the number of iterations drops dramatically and is always less than $n$. This is far better than the Jacobi Method. 
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{25 (a)} Applying finite differences to the Helmoholtz equation we get
+\begin{align*}
+	4u_{i,j} - u_{i+1,j} - u_{i-1,j} - u)_{i,j+1} - u_{i,j-1} - \omega^2 h^2 u_{i,j} & = b_{i,j} \\
+	(4- (\omega h)^2)u_{i,j} - u_{i+1,j} - u_{i-1,j} - u_{i,j+1} - u_{i,j-1} & = b_{i,j}
+\end{align*}
+where $b_{i,j} = h^2g(ih,jh)$ as in the text. This leads to an $A$ matrix similar to example 7.1 except that it has $4-(\omega h)^2$ for each diagonal element entry instead of $4$ for each diagonal entry. \bigbreak
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{15 (b)} If we let $A^\prime$ represent the matrix from example 7.1 (the one with $4$ along the diagonal) then our matrix would be given by $A = A^\prime- I(\omega h)^2$. Suppose that $\lambda$ is an eigenvalue of $A$. Then
+\begin{align*}
+	0 & = A - \lambda I \\
+	& = A - (\lambda + (\omega h)^2 - (\omega h)^2)I \\
+	& = A - \lambda I - (\omega h)^2I + (\omega h)^2I \\
+	& = (A + (\omega h)^2I) - (\lambda + (\omega h)^2)I \\
+	& = A^\prime - (\lambda + (\omega h)^2)I
+\end{align*}
+Thus concluding that $\lambda + (\omega h)^2$ is an eigenvalue of $A^\prime$. This tells us that all of the eigenvalues of $A$ are given by
+$$
+\lambda_{l,m} = 4 - 2(\cos(l \pi h) + \cos(m \pi h)) - (\omega h)^2, 1\leq l,m \leq N
+$$
+
+In order for $A$ to be positive definite, we need need for all of the eigenvalues to remain positive. Thus the $\omega_c^2h^2$ we seek is simply the smallest eigenvalue of $A^\prime$. Thus
+\begin{align*}
+	\omega_c^2h^2 & = 4 - 4 \cos\left(\frac{1 }{N+1}\pi \right) \\
+	\omega_c & = 2h \sqrt{1- \cos\left(\frac{1 }{N+1}\pi \right)}
+\end{align*}
+
+
+\bigbreak
+
+{\hspace{-4 ex} \huge \textbf{Appendix - Code listings}}\bigbreak
+
 
 
 \end{document}
