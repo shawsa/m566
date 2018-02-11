@@ -1,4 +1,8 @@
-function [x,res] = poismg(A,b,x,level)
+% This code is a modified version of the code used in example 7.7
+% https://www.mathworks.com/support/books/book69732.html
+
+
+function [x,res] = poismg(A,b,x,level,tol)
 %
 % function [x,res] = poismg(A,b,x,level)
 %
@@ -21,9 +25,11 @@ else % begin multigrid cycle
     % relax using damped Jacobi
     Dv = diag(A);         % diagonal part of A as vector
     for i=1:nu1
-      r = b - A*x;
-      x = x + omeg*r./Dv;
+     r = b - A*x;
+     x = x + omeg*r./Dv;
     end
+    % relax using minres
+    %x = minres(A,b,10,tol,nu1);
     
     % restrict residual from r to rc on coarser grid
     r = b - A*x; 
@@ -59,9 +65,12 @@ else % begin multigrid cycle
     
     % relax using damped Jacobi
     for i=1:nu2
-      r = b - A*x;
-      x = x + omeg*r./Dv;
+     r = b - A*x;
+     x = x + omeg*r./Dv;
     end
+    % relax using minres
+    %x = minres(A,b,10,tol,nu2);
+    
      
 end
 res = norm(b - A*x);
