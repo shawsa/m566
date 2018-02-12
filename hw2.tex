@@ -7,6 +7,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage{enumitem}
 %\usepackage{dsfont}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,6 +31,8 @@
 \renewcommand{\Re}{\operatorname{Re}}
 \renewcommand{\Im}{\operatorname{Im}}
 
+\newcommand{\solution}{\vspace{2 ex} \hspace{-5 ex} \emph{Solution.} }
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %page
@@ -39,7 +42,7 @@
 \allowdisplaybreaks
 \pagestyle{fancy}
 \fancyhf{}
-\rhead{Shaw \space \thepage}
+\rhead{Malmuth \& Shaw \space \thepage}
 \setlength\parindent{0pt}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,7 +154,8 @@ def residual(x,b):
 	for i in range(1, N):
 		r[i] = b[i] + x[i-1] - 4*x[i] + x[i+1] + x[i+N]
 	for i in range(N, n-N):
-		r[i] = b[i] + x[i-N] + x[i-1] - 4*x[i] + x[i+1] + x[i+N]
+		r[i] = b[i] + x[i-N] + x[i-1] - 4*x[i] + x[i+1] 
++ x[i+N]
 	for i in range(n-N, n-1):
 		r[i] = b[i] + x[i-N] + x[i-1] - 4*x[i] + x[i+1]
 	r[-1] = b[-1] + x[-1-N] + x[-2] - 4*x[-1]
@@ -171,7 +175,8 @@ def jacobi_solve(x, b, tol, max_iter=10**9):
 	res_norms = [np.linalg.norm(r)]
 	x_new = x_old + r/4
 	iterations = 1
-	while np.linalg.norm(r) > np.linalg.norm(b)*tol and iterations < max_iter:
+	while np.linalg.norm(r) > np.linalg.norm(b)*tol and
+ iterations < max_iter:
 		r = residual(x_new, b)
 		res_norms.append(np.linalg.norm(r))
 		x_new, x_old = x_new + r/4, x_new
@@ -395,7 +400,7 @@ where $b_{i,j} = h^2g(ih,jh)$ as in the text. This leads to an $A$ matrix simila
 \bigbreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\problem{15 (b)} If we let $A^\prime$ represent the matrix from example 7.1 (the one with $4$ along the diagonal) then our matrix would be given by $A = A^\prime- I(\omega h)^2$. Suppose that $\lambda$ is an eigenvalue of $A$. Then
+\problem{25 (b)} If we let $A^\prime$ represent the matrix from example 7.1 (the one with $4$ along the diagonal) then our matrix would be given by $A = A^\prime- I(\omega h)^2$. Suppose that $\lambda$ is an eigenvalue of $A$. Then
 \begin{align*}
 	0 & = A - \lambda I \\
 	& = A - (\lambda + (\omega h)^2 - (\omega h)^2)I \\
@@ -411,13 +416,13 @@ $$
 In order for $A$ to be positive definite, we need need for all of the eigenvalues to remain positive. Thus the $\omega_c^2h^2$ we seek is simply the smallest eigenvalue of $A^\prime$. Thus
 \begin{align*}
 	\omega_c^2h^2 & = 4 - 4 \cos\left(\frac{1 }{N+1}\pi \right) \\
-	\omega_c & = 2h \sqrt{1- \cos\left(\frac{1 }{N+1}\pi \right)}
+	\omega_c & = \frac{2}{h} \sqrt{1- \cos\left(\frac{1 }{N+1}\pi \right)}
 \end{align*}
 
 \bigbreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\problem{15 (c)} Code for this part was taken largely from the author's code for example 7.7, though some modifications were made. This was tested using the dampened Jacobi method for both relaxation steps, and again using Minres for both relaxation steps. The results were identical. Both methods were effective at reducing oscillations in the residual allowing the multigrid method to quickly reduce the smoothed residual. The number of multigrid cycles required did not change significantly with $N$.
+\problem{25 (c)} Code for this part was taken largely from the author's code for example 7.7, though some modifications were made. This was tested using the dampened Jacobi method for both relaxation steps, and again using MinRes for both relaxation steps. The results were identical. Both methods were effective at reducing oscillations in the residual allowing the multigrid method to quickly reduce the smoothed residual. The number of multigrid cycles required did not change significantly with $N$.
 
 \begin{figure}[H]
 	\caption{Multigrid method applied to the Helmoholtz equation with $\omega = 1$}
@@ -438,14 +443,93 @@ On checking the norms of the residuals we can see that they are way below the se
 			7& 127 & 16129 & 3.003766e-09\\ \hline
 		\end{tabular}
 	\end{center}
+	
+In the case where $\omega = 10$, we can see by part (b) of this problem that $\omega_c = 4.44277$ which is smaller than the prescribed $\omega=10$ for the second part of this problem. This means that $A$ is no longer positive definite and thus the multigrid method will not work. This is experimentally verified by changing $\omega$ to 10 in the code given in the appendix. In light of this, we turn to MinRes which does not require that the matrix be positive definite. 
+\bigbreak
 
+We find that MinRes requires $199$ iterations to converge for this particular problem. In contrast, the multigrid method required 4 iterations per recursion making a total of 16 relaxation steps plus solving the $8 \times 8$ system, and the interpolation steps. All of this together is far faster than the $199$ iterations of MinRes. 
+
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{16} Let $ A $ be symmetric positive definite and consider the CG method. Show that for $ \textbf{r}_k $ the residual in the $ k $th iteration and $ \textbf{e}_k $ the error in the $ k $th iteration, the following energy norm identities hold:
+\begin{enumerate}[leftmargin=0.6cm,label=(\alph*)]
+	\item $ \lVert \textbf{r}_k \rVert_{A^{-1}} = \lVert \textbf{e}_k \rVert_{A}$.
+	\item If $ \textbf{x}_k $ minimizes the quadratic function $ \phi(\textbf{x}) = \frac{1}{2}\textbf{x}^TA\textbf{x} - \textbf{x}^T\textbf{b} $ (note that \textbf{x} here is an argument vector, not the exact solution) over a subspace $ S $, then the same $ \textbf{x}_k $ minimizes the error $ \lVert \textbf{e}_k \rVert_{A} $ over $ S $.
+\end{enumerate}
+
+\vspace{-2 ex} \solution
+\begin{enumerate}[leftmargin=0.6cm,label=(\alph*)]
+	\item Since $ A $ is symmetric, we have that $ A^{-1} $ is symmetric by uniqueness of inverses. Additionally, since $ A $ is positive definite, $ A $ only have positive eigenvalues. Since the eigenvalues for $ A^{-1} $ are found using the reciprocals of the eigenvalues of $ A $, all eigenvalues for $ A^{-1} $ are positive and thus $ A^{-1} $ is positive definite. We have that $ A^{-1} $ is symmetric positive definite, thus the associated energy norm of $ \textbf{r}_k $ is
+	\begin{align*}
+	\lVert \textbf{r}_k \rVert_{A^{-1}} = \sqrt{\textbf{r}_k^TA^{-1}\textbf{r}_k}.
+	\end{align*}
+	We establish the relationship between $ \textbf{r}_k $ and $ \textbf{e}_k $ by
+	\begin{align*}
+	\textbf{r}_k &= \textbf{b} - A\textbf{x}_k \\
+	&= A\textbf{x} - A\textbf{x}_k \\
+	&= A(\textbf{x}-\textbf{x}_k) \\
+	&= A\textbf{e}_k.
+	\end{align*}
+	This also implies that $ \textbf{e}_k = A^{-1}\textbf{r}_k $. Therefore,
+	\begin{align*}
+	\lVert \textbf{r}_k \rVert_{A^{-1}} &= \sqrt{\textbf{r}_k^TA^{-1}\textbf{r}_k} \\
+	&= \sqrt{\textbf{r}_k^T\textbf{e}_k} \\
+	&= \sqrt{(A\textbf{e}_k)^T\textbf{e}_k} \\
+	&= \sqrt{\textbf{e}_k^TA^T\textbf{e}_k} \\
+	&= \sqrt{\textbf{e}_k^TA\textbf{e}_k} \\
+	&= \lVert \textbf{e}_k \rVert_{A}.  
+	\end{align*} 
+	\item Since $ \textbf{x}_k $ minimizes the quadratic function $ \phi $, we have that 
+	\begin{align*}
+	\nabla \phi(\textbf{x}_k) = A\textbf{x}_k - \textbf{b} = -\textbf{r}_k = 0, 
+	\end{align*}
+	i.e. $ \textbf{r}_k = \textbf{0} $. This means that
+	\begin{align*}
+	\lVert \textbf{r}_k \rVert_{A^{-1}} = \sqrt{\textbf{r}_k^TA^{-1}\textbf{r}_k} = 0.
+	\end{align*}
+	By (a), we know that $ \lVert \textbf{r}_k \rVert_{A^{-1}} = \lVert \textbf{e}_k \rVert_{A}$, thus $ \lVert \textbf{e}_k \rVert_{A} = 0 $. Therefore, $ \textbf{x}_k $ minimizes $ \lVert \textbf{e}_k \rVert_{A} $. 
+\end{enumerate}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{23} Define a linear problem with $ n = 500 $ using the script
+\begin{lstlisting}[language=MATLAB]
+A = randn(500,500); xt = randn(500,1); b = A*xt;
+\end{lstlisting}
+Now we save \textbf{xt} away and solve $ A\textbf{x} = \textbf{b} $. Set $ \text{tol} = 1.e-6 $ and maximum iteration limit of 2000. Run three solvers for this problem:
+\begin{enumerate}[leftmargin=0.6cm,label=(\alph*)]
+	\item CG on the normal equations: $ A^TA\textbf{x} = A^T\textbf{b} $.
+	\item GMRES(500)
+	\item GMRES(100), i.e., restarted GMRES with $ m = 100 $. 
+\end{enumerate}
+Record residual norm and solution error norm for each run.
+
+What are your conclusions?
+
+\solution
+\begin{enumerate}[leftmargin=0.6cm,label=(\alph*)]
+	\item Residual norm: 0.0095; Solution error norm: 0.0758 (runs 683 iterations and converges)
+	\item Residual norm: 0; Solution error norm: 8.1894e-12 (runs 862 iterations and converges)
+	\item Residual norm: 0.82; Solution error norm: 23.3632 (runs 2000 iterations and does not converge)
+\end{enumerate}
+We find that the CG method converges the quickest and that the GMRES converges at a similar rate. Additionally, by using the GMRES, we find the smallest residual norm as well as the smallest solution error norm. As stated in the book, the GMRES is a very strong tool to use when applied to matrices that don't require much storage space. Although our repeated GMRES did not converge within 2000 iterations, it would likely see more practical use with larger, sparse matrices. 
 
 
 \bigbreak
 
+\problem{19}
+
+
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 {\hspace{-4 ex} \huge \textbf{Appendix - Code listings}}\bigbreak
 
-\large{Problem 25(c) code:}
+\large{Problem 25(c) Multigrid code:}
 \begin{lstlisting}[language=MATLAB]
 clear all
 close all
@@ -491,6 +575,20 @@ xlabel("n");
 ylabel("Mutigrid Iterations");
 ylim([0,10]);
 hold off
+\end{lstlisting}
+
+\large{Problem 25 (c) MinRes Code}
+\begin{lstlisting}[language=MATLAB]
+N = 2^7-1;
+w = 1;
+h = 1/(N+1);
+n = N^2;
+A = delsq(numgrid('S',N+2)) - diag(ones(n,1).*(w*h)^2);
+b = ones(n,1)*h^2;
+
+[x, ~, ~, iter] = minres(A,b,1e-6,2000);
+norm(A*x-b)
+iter
 \end{lstlisting}
 
 \large{Code for the poismg function}
@@ -570,6 +668,58 @@ end
 
 end
 res = norm(b - A*x);
+\end{lstlisting}
+
+\large{Problem 23 Code}
+\begin{lstlisting}[language=MATLAB]
+%% CG on the normal equations
+
+close all
+clear
+clc
+n = 500; % A = n x n; b = n x 1
+max = 8000; % Max number of iterations
+A = randn(n,n);
+xt = randn(n,1);
+b = A*xt;
+x0 = zeros(n,1);
+[x_cg,iter,res] = conjgrad(A'*A,A'*b,x0,1e-6);
+norm(res(iter))
+norm(x_cg-xt)
+%% GMRES(500)
+close all
+clc
+x_gmres_500 = gmres(A,b,500,1e-6,max);
+norm(x_gmres_500-xt)
+%% GMRES(100),i.e., restarted GMRES with m = 100
+close all
+clc
+x_gmres_100 = gmres(A,b,100,1e-6,max);
+norm(x_gmres_100-xt)
+\end{lstlisting}
+
+\large{Conjugate Gradient for Problem 23}
+\begin{lstlisting}[language=MATLAB]
+function [x,iter,res] = conjgrad(A,b,x0,tol)
+tol2 = tol^2;
+x = x0;
+r = b - A*x0;
+d = r'*r; 
+bb = b'*b;
+p = r;
+iter = 0;
+while d > tol2 * bb
+do = d;
+s = A*p;
+alfa = d / (p'*s);
+x = x + alfa*p;
+r = r - alfa*s;
+d = r'*r;
+p = r + d/do*p;
+iter = iter + 1;
+res(iter) = norm(r);
+end
+end
 \end{lstlisting}
 
 \end{document}

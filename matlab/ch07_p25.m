@@ -45,3 +45,16 @@ hold off
 
 %[~,pd] = chol(A);
 %pd
+%%
+
+N = 2^7-1;
+w = 1;
+h = 1/(N+1);
+n = N^2;
+A = delsq(numgrid('S',N+2)) - diag(ones(n,1).*(w*h)^2);
+b = ones(n,1)*h^2;
+
+[x, ~, ~, iter] = minres(A,b,1e-6,2000);
+norm(A*x-b)
+iter
+
