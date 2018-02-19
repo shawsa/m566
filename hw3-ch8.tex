@@ -1,0 +1,218 @@
+\documentclass[12pt]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Math
+\usepackage{fancyhdr} 
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumitem}
+%\usepackage{dsfont}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Macros
+\usepackage{calc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Commands and Custom Variables	
+\newcommand{\problem}[1]{\hspace{-4 ex} \large \textbf{Problem #1} }
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\sint}{\text{s}\kern-5pt\int}
+\newcommand{\powerset}{\mathcal{P}}
+\renewenvironment{proof}{\hspace{-4 ex} \emph{Proof}:}{\qed}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\CC}{\mathbb{C}}
+\renewcommand{\Re}{\operatorname{Re}}
+\renewcommand{\Im}{\operatorname{Im}}
+
+\newcommand{\solution}{\vspace{2 ex} \hspace{-5 ex} \emph{Solution.} }
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%page
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+%\doublespacing
+\allowdisplaybreaks
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Malmuth \& Shaw \space \thepage}
+\setlength\parindent{0pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Code
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+	language=Python,
+	showstringspaces=false,
+	formfeed=newpage,
+	tabsize=4,
+	commentstyle=\itshape,
+	basicstyle=\ttfamily,
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Images
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{float}
+
+%tikz
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Hyperlinks
+%\usepackage{hyperref}
+%\hypersetup{
+%	colorlinks=true,
+%	linkcolor=blue,
+%	filecolor=magenta,      
+%	urlcolor=cyan,
+%}
+
+\begin{document}
+	\thispagestyle{empty}
+	
+	\begin{flushright}
+		Daniel Malmuth \& Sage Shaw \\
+		m566 - Spring 2018 \\
+		\today
+	\end{flushright}
+	
+{\large \textbf{HW - Chapter 8}}\bigbreak
+
+\problem{1 (a)} Let $P$ be a matrix such that $P^2 = P$ (a projector matrix). Let $\mathbf{x}$ be an eigenvector (non-zero) of $P$ with corresponding eigenvalue $\lambda$. Then
+\begin{align*}
+	\lambda \mathbf{x} & = P \mathbf{x} \\
+	& = P^2 \mathbf{x}\\
+	& = P (P \mathbf{x}) \\
+	& = P(\lambda \mathbf{x}) \\
+	& = \lambda^2 \mathbf{x} \\
+	\lambda & = \lambda^2
+	0 = \lambda(1- \lambda) \\
+\end{align*}
+Thus $\lambda = 0$ and $\lambda = 1$ are the only possible eigenvalues of a projector matrix.
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{1 (b)} Show that if $P$ is a projector, then $I-P$ is a projector.
+
+\begin{proof}
+	Let $P$ be a projector. Then
+	\begin{align*}
+		(I-P)^2 & = (I-P)(I-P) \\
+		& = I^2 - IP - PI + P^2 \\
+		& = I - P - P + P \\
+		& = I - P
+	\end{align*}
+	Thus $(I-P)$ is a projector as well.
+\end{proof}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{8 (a)} For a matrix $A \in \RR^{m \times n}$ with $m>n$, suppose $A$ is rank $n$ and show that $A^TA$ is non-singular.
+
+\begin{proof}
+	Let $U\Sigma V^T = A$ be the singular value decomposition of $A$. Then $U \in \RR^{m \times m}$ and $V \in \RR^{n\times n}$ are orthogonal matrices and $\Sigma \in \RR^{n \times m}$ is rank $n$ and has $n$ non-zero values on its diagonal. Then
+	\begin{align*}
+		A^TA & = V \Sigma^T U^T U \Sigma V^T \\
+		& = V \Sigma^T \Sigma V^T
+	\end{align*}
+	Since $\Sigma ^T \Sigma$ is an $n \times n$ diagonal matrix with non-zeros on its diagonal it is non-singular. Obviously $V$ and $V^T=V^{-1}$ are non-singular so $A^TA$ is non-singular as well.
+\end{proof}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{8 (b)} For a matrix $A \in \RR^{m \times n}$ with $m>n$, suppose $A$ is rank $n$ (full column rank) and show that $A(A^TA)^{-1}A^T$ a symmetric projector, also called an orthogonal projector.
+
+\begin{proof}
+	From part $A$ we know that $(A^TA)^{-1}$ exits. Since
+	\begin{align*}
+		\big( A(A^TA)^{-1}A^T \big)^T & = (A^T)^T \big( (A^TA)^{-1} \big)^T A^T \\
+		& = A \big( (A^TA)^{T} \big)^{-1} A^T \\
+		& = A \big( (A^T(A^T)^T) \big)^{-1} A^T \\
+		& = A(A^TA)^{-1}A^T
+	\end{align*}
+	we know it is symmetric. Verifying that it is a projector is simply a mater of algebra
+	\begin{align*}
+		\big( A(A^TA)^{-1}A^T \big)^2 & = A(A^TA)^{-1}A^T A(A^TA)^{-1}A^T \\
+		& = A(A^TA)^{-1} (A^T A) (A^TA)^{-1}A^T \\
+		& = A(A^TA)^{-1} I A^T \\
+		& = A(A^TA)^{-1} A^T \\
+	\end{align*}
+\end{proof}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{8 (c)} Show that the solution to the linear least squares problem satisfies
+$$
+\mathbf{r} = \mathbf{b} - A \mathbf{x} = P \mathbf{b}
+$$
+where $P$ is an orthogonal projector.
+
+\begin{proof}
+	We know that the solution to the least squares problem can be expressed in terms of the pseudo-inverse
+	$$
+		\mathbf{x} = (A^TA)^{-1}A^T \mathbf{b}
+	$$
+	Then the residual is given by
+	\begin{align*}
+		\mathbf{r} & = \mathbf{b} - A (A^TA)^{-1}A^T \mathbf{b} \\
+		& = \big( I - A (A^TA)^{-1}A^T \big) \mathbf{b}
+	\end{align*}
+	Let $P = I - A (A^TA)^{-1}A^T$ From parts (a) and (b) we know that this is a projector. Since $I$ is symmetric and the difference of symmetric matrices is also symmetric we know from part (b) that $P$ is symmetric.
+\end{proof}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{8 (d)} Express $P$ from part (c) in terms of the QR decomposition of $A$. \bigbreak
+
+Let $A_{m \times n} = Q_{m \times m} R_{m \times n}$ be the QR decomposition of $A$. Then substituting we have
+\begin{align*}
+	P & = I - A (A^TA)^{-1}A^T \\
+	& = I - QR (R^TQ^TQR)^{-1}R^TQ^T \\
+	& = QIQ^T - QR (R^TR)^{-1}R^TQ^T \\
+	& = Q(I - R (R^TR)^{-1}R^T)Q^T
+\end{align*}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{8 (e)} With $\mathbf{r}$ defined as the residual (as usual) let $\hat{\mathbf{b}} = \mathbf{b} - \alpha \mathbf{r}$ and show that the vector $\mathbf{x}$ that minimizes the least squares problem $A\mathbf{x} = \mathbf{b}$ also minimizes the least squares problem $A\mathbf{x} = \hat{\mathbf{b}}$.
+
+\begin{proof}
+	Let $\mathbf{x} = (A^TA)^{-1}A^T\mathbf{b}$. Then $\mathbf{x}$ is the solution to the least squares problem for the system $A\mathbf{x} = \mathbf{b}$. Define $\mathbf{r} = \mathbf{b} - A \mathbf{x}$. Let $\alpha$ be a scalar. Define $\hat{\mathbf{b}} = \mathbf{b} - \alpha \mathbf{r}$. The solution to the least squares problem $A\mathbf{z} = \hat{\mathbf{b}}$ is given by
+	\begin{align*}
+		\mathbf{z} & = (A^TA)^{-1}A^T \hat{\mathbf{b}} \\
+		& = (A^TA)^{-1}A^T (\mathbf{b} - \alpha \mathbf{r}) \\
+		& = (A^TA)^{-1}A^T \mathbf{b} - \alpha (A^TA)^{-1}A^T \mathbf{r} \\
+		& = \mathbf{x} - \alpha (A^TA)^{-1}A^T (\mathbf{b} - A \mathbf{x}) \\
+		& = \mathbf{x} - \alpha \big(  (A^TA)^{-1}A^T \mathbf{b} - (A^TA)^{-1}A^T A \mathbf{x} \big) \\
+		& = \mathbf{x} - \alpha \big(  \mathbf{x} - (A^TA)^{-1}(A^T A) \mathbf{x} \big) \\
+		& = \mathbf{x} - \alpha \big(  \mathbf{x} - I \mathbf{x} \big) \\
+		& = \mathbf{x}
+	\end{align*}
+\end{proof}
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{\hspace{-4 ex} \large \textbf{Appendix - Code listings}}\bigbreak
+
+
+
+\end{document}

@@ -443,8 +443,21 @@ On checking the norms of the residuals we can see that they are way below the se
 			7& 127 & 16129 & 3.003766e-09\\ \hline
 		\end{tabular}
 	\end{center}
+
+
 	
-In the case where $\omega = 10$, we can see by part (b) of this problem that $\omega_c = 4.44277$ which is smaller than the prescribed $\omega=10$ for the second part of this problem. This means that $A$ is no longer positive definite and thus the multigrid method will not work. This is experimentally verified by changing $\omega$ to 10 in the code given in the appendix. In light of this, we turn to MinRes which does not require that the matrix be positive definite. 
+In the case where $\omega = 10$, we can see by part (b) of this problem that $\omega_c = 4.44277$ which is smaller than the prescribed $\omega=10$ for the second part of this problem. This means that $A$ is no longer positive definite. The same implementation of the multigrid method fails to converge. I suspect that since the matrix is no longer positive definite, that the dampened Jacobi is no longer an effective smoother. I have tried to replace the dampened Jacbi in both relaxation steps with MinRes and it restores convergence but at a rate so slow that it doesn't converge within 1,000 iterations of multigrid. I suspect that MinRes doesn't have the same smoothing effects as the Jacobi method, and thus multigrid reverts to its slow convergence when the residual has high frequency oscillations. 
+
+\bigbreak
+
+
+
+\iffalse
+ and thus the multigrid method will not work. This is experimentally verified by changing $\omega$ to 10 in the code given in the appendix.
+ \fi
+ 
+ Unable to fix the slow convergence of multigrid, we turn to a pure MinRes which does not require that the matrix be positive definite.
+  
 \bigbreak
 
 We find that MinRes requires $199$ iterations to converge for this particular problem. In contrast, the multigrid method required 4 iterations per recursion making a total of 16 relaxation steps plus solving the $8 \times 8$ system, and the interpolation steps. All of this together is far faster than the $199$ iterations of MinRes. 
@@ -520,8 +533,7 @@ We find that the CG method converges the quickest and that the GMRES converges a
 
 \bigbreak
 
-\problem{19}
-
+\problem{19} As far as we can tell, when solving the linear system $A\textbf{x} = \textbf{b}$ in the case where $\textbf{b}$ is an eigenvector of $A$, the number of iterations required for convergence of Conjugate Gradient and of GEMRes does not seem to change. We have been unable to algebraically find a reason for either to converge faster, and both methods still converge as per their respective theorems. In the appendix we have included our testing code that fails to contradict our conclusion. Both CG and GEMRes still require $n$ iterations to converge in theory.
 
 
 \bigbreak
@@ -533,7 +545,7 @@ We find that the CG method converges the quickest and that the GMRES converges a
 \begin{lstlisting}[language=MATLAB]
 clear all
 close all
-% This code is a modified version of the code used in example 7.7
+% This code is a modified version of the code used in example 7.17
 % https://www.mathworks.com/support/books/book69732.html
 
 l = 7;
@@ -593,7 +605,7 @@ iter
 
 \large{Code for the poismg function}
 \begin{lstlisting}[language=MATLAB]
-% This code is a modified version of the code used in example 7.7
+% This code is a modified version of the code used in example 7.17
 % https://www.mathworks.com/support/books/book69732.html
 
 
@@ -720,6 +732,27 @@ iter = iter + 1;
 res(iter) = norm(r);
 end
 end
+\end{lstlisting}
+
+\large{Problem 19 testing}
+\begin{lstlisting}[language=MATLAB]
+%% Test for convergence to eigenvector using CG
+close all
+clear
+clc
+
+n = 500;
+A = randn(n,n);
+[V,D] = eig(A'*A);
+b = V(:,1);
+x0 = zeros(n,1);
+[x,iter,res] = conjgrad(A'*A,A'*b,x0,1e-6);
+
+%% Test for convergence to eigenvector using GMRES
+[V1,D1] = eig(A);
+b1 = V1(:,1);
+
+[x_gm,flag,relres,iter2] = gmres(A,b,n,1e-6,n);
 \end{lstlisting}
 
 \end{document}

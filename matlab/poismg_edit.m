@@ -2,7 +2,7 @@
 % https://www.mathworks.com/support/books/book69732.html
 
 
-function [x,res] = poismg(A,b,x,level,tol)
+function [x,res] = poismg_edit(A,b,x,level,tol)
 %
 % function [x,res] = poismg(A,b,x,level)
 %
@@ -23,13 +23,13 @@ if level == coarsest
 else % begin multigrid cycle
     
     % relax using damped Jacobi
-    Dv = diag(A);         % diagonal part of A as vector
-    for i=1:nu1
-     r = b - A*x;
-     x = x + omeg*r./Dv;
-    end
+%     Dv = diag(A);         % diagonal part of A as vector
+%     for i=1:nu1
+%      r = b - A*x;
+%      x = x + omeg*r./Dv;
+%     end
     % relax using minres
-    %x = minres(A,b,10,tol,nu1);
+    x = minres(A,b,10,tol);
     
     % restrict residual from r to rc on coarser grid
     r = b - A*x; 
@@ -44,7 +44,7 @@ else % begin multigrid cycle
     
     % descend level. Use V-cycle
     vc = zeros(size(rc));            % initialize correction to 0
-    [vc,r] = poismg(Ac,rc,vc,level-1); % samesame on coarser grid
+    [vc,r] = poismg_edit(Ac,rc,vc,level-1); % samesame on coarser grid
     
     % prolongate correction from vc to v on finer grid
     v = zeros(N,N);
@@ -64,12 +64,12 @@ else % begin multigrid cycle
     x = x + reshape(v,n,1);
     
     % relax using damped Jacobi
-    for i=1:nu2
-     r = b - A*x;
-     x = x + omeg*r./Dv;
+%     for i=1:nu2
+%      r = b - A*x;
+%      x = x + omeg*r./Dv;
     end
     % relax using minres
-    %x = minres(A,b,10,tol,nu2);
+    x = minres(A,b,10,tol);
     
      
 end

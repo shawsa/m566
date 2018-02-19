@@ -11,10 +11,10 @@ for i=1:4
     N = 2^l - 1;
     
     %N = 2^7 -1;
-    tol = 1.e-6;  % should actually depend on N but never mind.
+    tol = 1e-6;  % should actually depend on N but never mind.
 
 
-    w = 1;
+    w = 10;
     h = 1/(N+1);
     n = N^2;
     ns(i,1) = n;
@@ -25,8 +25,8 @@ for i=1:4
     % Solve using multigrid
     xmg = zeros(n,1); bb = norm(b);
     flevel = log2(N+1);
-    for itermg = 1:30
-       [xmg,res] = poismg(A,b,xmg,flevel);
+    for itermg = 1:20
+       [xmg,res] = poismg(A,b,xmg,flevel,tol);
        if res/bb < tol
               break;
        end

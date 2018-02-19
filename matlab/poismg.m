@@ -1,4 +1,4 @@
-function [x,res] = poismg(A,b,x,level)
+function [x,res] = poismg(A,b,x,level,tol)
 %
 % function [x,res] = poismg(A,b,x,level)
 %
@@ -25,6 +25,9 @@ else % begin multigrid cycle
       x = x + omeg*r./Dv;
     end
     
+    % relax using minres
+    %[x, flag] = minres(A,b,tol,2);
+
     % restrict residual from r to rc on coarser grid
     r = b - A*x; 
     N = sqrt(length(b));
@@ -38,7 +41,7 @@ else % begin multigrid cycle
     
     % descend level. Use V-cycle
     vc = zeros(size(rc));            % initialize correction to 0
-    [vc,r] = poismg(Ac,rc,vc,level-1); % samesame on coarser grid
+    [vc,r] = poismg(Ac,rc,vc,level-1,tol); % samesame on coarser grid
     
     % prolongate correction from vc to v on finer grid
     v = zeros(N,N);
@@ -62,6 +65,8 @@ else % begin multigrid cycle
       r = b - A*x;
       x = x + omeg*r./Dv;
     end
+    % relax using minres
+%     [x,flag]  = minres(A,b,tol,2);
      
 end
 res = norm(b - A*x);
