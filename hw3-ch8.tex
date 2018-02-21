@@ -211,8 +211,373 @@ Let $A_{m \times n} = Q_{m \times m} R_{m \times n}$ be the QR decomposition of 
 \bigbreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\problem{4} Use the setup of Exercise 3 to repeat the calculations and considerations of Example 8.4 for the matrix $ A $ with shifts $ \alpha = 33 $
+and $ \alpha = 35 $. Make observations and explain them.
+
+\solution The setup of Exercise 3 involves using a matrix $ A^* $ constructed by $ A^* = QAQ' $, where $ Q $ is the $ Q $ matrix of a QR factorization from a randomly generated $ 32 \times 32 $ matrix $ M $. We first plot \texttt{u = 1:32} and \texttt{u = [1:30,30,32]} where the matrix used in our algorithm is $ A $. We receive the plots
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[b]{0.4\textwidth}
+		\includegraphics[width=\textwidth]{hw3p4p1.eps}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[b]{0.4\textwidth}
+		\includegraphics[width=\textwidth]{hw3p4p2.eps}
+	\end{minipage}
+\end{figure}
+When we instead use the matrix $ A^* $ in our algorithm, we receive the plots
+\begin{figure}[H]
+	\centering
+	\begin{minipage}[b]{0.4\textwidth}
+		\includegraphics[width=\textwidth]{hw3p4p3.eps}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[b]{0.4\textwidth}
+		\includegraphics[width=\textwidth]{hw3p4p4.eps}
+	\end{minipage}
+\end{figure}
+We see here that the convergence behavior is of the same order and has similar shape. Since $ A^* $ is simply a product of $ A $ with an orthonormal matrix and its inverse, the conditioning is the same. 
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{10} In this question we will play with two pictures (see Figure 8.9) that can be found in MATLAB's repository of images and can be retrieved by entering \texttt{load mandrill} and \texttt{load durer}. After loading these files, enter for each the command \texttt{colormap(gray)} and then \texttt{image(X)}. As you can see, these pictures feature the handsome mandrill and a drawing by the artist Albrecht D\"urer, who lived in the 1500s.
+\begin{enumerate}[leftmargin=0.6cm,label=(\alph*)]
+	\item Write a short MATLAB script for computing the truncated SVD of these images. For both pictures, start with rank $ r = 2 $ and go up by powers of 2, to $ r = 64 $. For a compact presentation of your figures use the command \texttt{subplot} for each of the pictures, with 3 and 2 as the first two arguments. (Check out \texttt{help subplot} for more information.)
+	\item Comment on the performance of the truncated SVD for each of the pictures. State how much storage is required as a function of $ r $ and how much storage is required for the original pictures. Explain the difference in the effectiveness of the technique for the two images for small $ r $. [Use grayscale for calculations.]
+\end{enumerate}
+
+\vspace{-2 ex} \solution
+\begin{enumerate}[leftmargin=0.6cm,label=(\alph*)]
+	\item Our original image of the mandrill gives us
+	\begin{figure}[H]
+		\begin{center}
+			\includegraphics[scale=.6]{hw3p10p1.eps}
+		\end{center}
+	\end{figure}
+	When we apply our different $ r $ values, we receive
+	\begin{figure}[H]
+		\begin{center}
+			\includegraphics[scale=.8]{hw3p10p2.eps}
+		\end{center}
+	\end{figure}
+	Our original image of the drawing by D\"urer gives us
+	\begin{figure}[H]
+		\begin{center}
+			\includegraphics[scale=.6]{hw3p10p3.eps}
+		\end{center}
+	\end{figure}
+	When we apply our different $ r $ values, we receive
+	\begin{figure}[H]
+		\begin{center}
+			\includegraphics[scale=.8]{hw3p10p4.eps}
+		\end{center}
+	\end{figure}
+	\item We see that the drawing by D\"urer starts to see faster changes as $ r $ increases. For the best $ r $ rank approximation of an $ m \times n $ matrix $ A $, we use
+	\begin{align*}
+	A_r = \sum_{i=1}^r \sigma_iu_iv_i^T
+	\end{align*}
+	where $ u_j $ is the $ j $-th column of $ U $, $ v_j^T $ is the $ j $-th row of $ V^T $, and $ \sigma_j $ is the $ j $-th singular value. This means that the amount of storage required is $ (m+n+1)r $, since each $ u_j $ vector is length $ m $, each $ v_j $ vector is length $ n $, and each singular value is length 1. Since the mandrill image has such a sharp gradient between features in the face, there are very few subtle features that are filled in for the middle values $ r $ values. Since there is a wider variation of shading in the D\"urer, we see finer features being filled in more rapidly. 
+\end{enumerate}
+
 {\hspace{-4 ex} \large \textbf{Appendix - Code listings}}\bigbreak
 
+\large{Problem 10}
+\begin{lstlisting}
+clear all
+close all
+clc
 
+colormap(gray)
+load mandrill
+figure(1)
+image(X);
+
+%%
+
+[U,S,V] = svd(X);
+figure(2)
+
+subplot(3,2,1)
+r1 = 2;
+colormap(gray)
+image(U(:,1:r1)*S(1:r1,1:r1)*V(:,1:r1)');
+title('r = 2')
+
+subplot(3,2,2)
+r2 = 4;
+colormap(gray)
+image(U(:,1:r2)*S(1:r2,1:r2)*V(:,1:r2)');
+title('r = 4')
+
+subplot(3,2,3)
+r3 = 8;
+colormap(gray)
+image(U(:,1:r3)*S(1:r3,1:r3)*V(:,1:r3)');
+title('r = 8')
+
+subplot(3,2,4)
+r4 = 16;
+colormap(gray)
+image(U(:,1:r4)*S(1:r4,1:r4)*V(:,1:r4)');
+title('r = 16')
+
+subplot(3,2,5)
+r5 = 32;
+colormap(gray)
+image(U(:,1:r5)*S(1:r5,1:r5)*V(:,1:r5)');
+title('r = 32')
+
+subplot(3,2,6)
+r6 = 64;
+colormap(gray)
+image(U(:,1:r6)*S(1:r6,1:r6)*V(:,1:r6)');
+title('r = 64')
+
+%%
+
+figure
+load durer
+colormap(gray)
+image(X)
+
+%%
+
+[U,S,V] = svd(X);
+figure(2)
+
+subplot(3,2,1)
+r1 = 2;
+colormap(gray)
+image(U(:,1:r1)*S(1:r1,1:r1)*V(:,1:r1)');
+title('r = 2')
+
+subplot(3,2,2)
+r2 = 4;
+colormap(gray)
+image(U(:,1:r2)*S(1:r2,1:r2)*V(:,1:r2)');
+title('r = 4')
+subplot(3,2,3)
+
+r3 = 8;
+colormap(gray)
+image(U(:,1:r3)*S(1:r3,1:r3)*V(:,1:r3)');
+title('r = 8')
+
+subplot(3,2,4)
+r4 = 16;
+colormap(gray)
+image(U(:,1:r4)*S(1:r4,1:r4)*V(:,1:r4)');
+title('r = 16')
+
+subplot(3,2,5)
+r5 = 32;
+colormap(gray)
+image(U(:,1:r5)*S(1:r5,1:r5)*V(:,1:r5)');
+title('r = 32')
+
+subplot(3,2,6)
+r6 = 64;
+colormap(gray)
+image(U(:,1:r6)*S(1:r6,1:r6)*V(:,1:r6)');
+title('r = 64')
+\end{lstlisting}
+
+\bigbreak
+\large{Problem 4}
+\begin{lstlisting}
+% u = [1:32] example with no Q multiplication
+clear all
+close all
+clc
+
+u = 1:32;
+A = diag(u);
+I = eye(32);
+
+A1 = A-33*I; A2 = A-35*I;
+
+x = ones(32,1); x = x/norm(x);
+initial = x'*A*x;
+
+for i = 1:1000, 
+	x = A1\x; x = x/norm(x); 
+	lamA1(i) = x'*A*x; 
+	if abs(lamA1(i)-32)<1e-5 break, end
+end
+
+x = ones(32,1); x = x/norm(x);
+
+for i = 1:100, 
+	x = A2\x; x = x/norm(x); 
+	lamA2(i) = x'*A*x; 
+	if abs(lamA2(i)-32)<1e-5 break, end
+end
+
+
+lamA1 = [initial lamA1];
+semilogy(0:length(lamA1)-1,abs(lamA1-32),'r--*')
+hold on
+lamA2=[initial lamA2];
+semilogy(0:length(lamA2)-1,abs(lamA2-32),'-*')
+
+legend('\alpha=33','\alpha=35')
+xlabel('iteration')
+ylabel('absolute error')
+title('Convergence Behavior with u = [1:32]')
+
+%%
+
+% u = [1:30,30,32] example with no Q multiplication
+clear all
+close all
+clc
+
+u = [1:30,30,32];
+A = diag(u);
+I = eye(32);
+
+A1 = A-33*I; A2 = A-35*I;
+
+x = ones(32,1); x = x/norm(x);
+initial = x'*A*x;
+for i = 1:1000, 
+	x = A1\x; x = x/norm(x); 
+	lamA1(i) = x'*A*x; 
+	if abs(lamA1(i)-32)<1e-5 break, end
+end
+
+x = ones(32,1); x = x/norm(x);
+for i = 1:100, 
+	x = A2\x; x = x/norm(x); 
+	lamA2(i) = x'*A*x; 
+	if abs(lamA2(i)-32)<1e-5 break, end
+end
+
+lamA1 = [initial lamA1];
+semilogy(0:length(lamA1)-1,abs(lamA1-32),'r--*')
+hold on
+lamA2=[initial lamA2];
+semilogy(0:length(lamA2)-1,abs(lamA2-32),'-*')
+
+legend('\alpha=33','\alpha=35')
+xlabel('iteration')
+ylabel('absolute error')
+title('Convergence Behavior with u = [1:30,30,32]')
+
+%%
+
+% u = [1:32] example with Q multiplication
+clear all
+close all
+clc
+
+
+u = 1:32;
+M = randn(32,32);
+[Q,R] = qr(M);
+A = Q*diag(u)*Q'; 
+I = eye(32);
+
+A1 = A-33*I; A2 = A-35*I;
+x = ones(32,1); x = x/norm(x);
+initial = x'*A*x;
+
+for i = 1:1000, 
+	x = A1\x; x = x/norm(x); 
+	lamA1(i) = x'*A*x; 
+	if abs(lamA1(i)-32)<1e-5 break, end
+end
+
+x = ones(32,1); x = x/norm(x);
+for i = 1:100, 
+	x = A2\x; x = x/norm(x); 
+	lamA2(i) = x'*A*x; 
+	if abs(lamA2(i)-32)<1e-5 break, end
+end
+
+lamA1 = [initial lamA1];
+semilogy(0:length(lamA1)-1,abs(lamA1-32),'r--*')
+hold on
+lamA2=[initial lamA2];
+semilogy(0:length(lamA2)-1,abs(lamA2-32),'-*')
+
+legend('\alpha=33','\alpha=35')
+xlabel('iteration')
+ylabel('absolute error')
+title('Convergence Behavior with u = [1:32]')
+
+%%
+
+% u = [1:30,30,32] example with Q multiplication
+
+clearvars -except M 
+
+close all
+
+clc 
+
+
+u = [1:30,30,32];
+
+[Q,R] = qr(M);
+
+A = Q*diag(u)*Q'; 
+
+I = eye(32);
+
+
+A1 = A-33*I; A2 = A-35*I;
+
+
+x = ones(32,1); x = x/norm(x);
+
+initial = x'*A*x;
+
+
+for i = 1:1000, 
+
+	x = A1\x; x = x/norm(x); 
+	
+	lamA1(i) = x'*A*x; 
+	
+	if abs(lamA1(i)-32)<1e-5 break, end
+
+end
+
+
+x = ones(32,1); x = x/norm(x);
+
+
+for i = 1:100, 
+
+x = A2\x; x = x/norm(x); 
+
+lamA2(i) = x'*A*x; 
+
+if abs(lamA2(i)-32)<1e-5 break, end
+
+end
+
+
+lamA1 = [initial lamA1];
+
+semilogy(0:length(lamA1)-1,abs(lamA1-32),'r--*')
+
+hold on
+
+lamA2=[initial lamA2];
+
+semilogy(0:length(lamA2)-1,abs(lamA2-32),'-*')
+
+
+legend('\alpha=33','\alpha=35')
+
+xlabel('iteration')
+
+ylabel('absolute error')
+
+title('Convergence Behavior with u = [1:30,30,32]')
+\end{lstlisting}
 
 \end{document}
