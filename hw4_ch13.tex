@@ -1,0 +1,175 @@
+\documentclass[12pt]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Math
+\usepackage{fancyhdr} 
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumitem}
+%\usepackage{dsfont}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Macros
+\usepackage{calc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Commands and Custom Variables	
+\newcommand{\problem}[1]{\hspace{-4 ex} \large \textbf{Problem #1} }
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\sint}{\text{s}\kern-5pt\int}
+\newcommand{\powerset}{\mathcal{P}}
+\renewenvironment{proof}{\hspace{-4 ex} \emph{Proof}:}{\qed}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\CC}{\mathbb{C}}
+\renewcommand{\Re}{\operatorname{Re}}
+\renewcommand{\Im}{\operatorname{Im}}
+
+\newcommand{\solution}{\vspace{2 ex} \hspace{-5 ex} \emph{Solution.} }
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%page
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+%\doublespacing
+\allowdisplaybreaks
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Malmuth \& Shaw \space \thepage}
+\setlength\parindent{0pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Code
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+	language=Python,
+	showstringspaces=false,
+	formfeed=newpage,
+	tabsize=4,
+	commentstyle=\itshape,
+	basicstyle=\ttfamily,
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Images
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{float}
+
+%tikz
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Hyperlinks
+%\usepackage{hyperref}
+%\hypersetup{
+%	colorlinks=true,
+%	linkcolor=blue,
+%	filecolor=magenta,      
+%	urlcolor=cyan,
+%}
+
+\begin{document}
+	\thispagestyle{empty}
+	
+	\begin{flushright}
+		Daniel Malmuth \& Sage Shaw \\
+		m566 - Spring 2018 \\
+		\today
+	\end{flushright}
+	
+{\large \textbf{HW - Chapter 13}}\bigbreak
+
+\problem{5} The code listed in the appendix does as this problem asks. When ran, it gives an output of $3.78285*10^{-15}$ telling us that the left hand side and the right hand side of the identities are equal to within machine precision. 
+
+\bigbreak
+\problem{10} Let $m,n,l \in \ZZ^+$ such that $m=n+1=2l$. Let $x_\alpha = \frac{2\pi \alpha}{m}$ for $\alpha=0,1,...,m-1$. From section 13.3 we are given that for $-l \leq j \leq l-1$
+\begin{align*}
+	c_j & = \frac{1}{m} \sum\limits_{\alpha=0}^{m-1} y_\alpha e^{-ijx_\alpha} \\
+	& = \frac{1}{m} \sum\limits_{\alpha=0}^{m-1} y_\alpha \left( \cos(jx_\alpha) - i\sin(jx_\alpha)\right)
+\end{align*}
+From section 13.2 we are given that
+\begin{align*}
+	a_k &= \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \cos(k x_\alpha) & \text{for }k&=0, 1, ..., l \\
+	b_k &= \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \sin(k x_\alpha) & \text{for }k&=0, 1, ..., l-1 \\
+\end{align*}
+Note that $lx_\alpha = l \frac{2\pi \alpha}{m} = \alpha \pi$ and thus $\sin(l x_\alpha) = 0$ for any integer alpha. We will define $b_l=0$ and notice that this definition extends the formula above to $k=0,...,l$. \\
+Suppose that $0 \leq j \leq l-1$. Also note that $\frac{1}{l} = \frac{2}{m}$. Then
+\begin{align*}
+	a_j - ib_j & = \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \cos(j x_\alpha) - i \frac{1}{l}\sum\limits_{\alpha=0}^{n} y_\alpha \sin(j x_\alpha) \\
+	& = \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \left( \cos(j x_\alpha) - i\sin(j x_\alpha) \right) \\
+	& = \frac{2}{m} \sum\limits_{\alpha=0}^{n} y_\alpha e^{-ijx_\alpha} \\
+	& = c_j
+\end{align*}
+Suppose that $-l \leq j < 0$. Then
+\begin{align*}
+a_{-j} + ib_{-j} & = \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \cos(-j x_\alpha) + i \frac{1}{l}\sum\limits_{\alpha=0}^{n} y_\alpha \sin(-j x_\alpha) \\
+& = \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \left( \cos(-j x_\alpha) + i\sin(-j x_\alpha) \right) \\
+& = \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \left( \cos(j x_\alpha) - i\sin(j x_\alpha) \right) \\
+& = \frac{2}{m} \sum\limits_{\alpha=0}^{n} y_\alpha e^{-ijx_\alpha} \\
+& = c_j
+\end{align*}
+Thus we have the relationship 
+\begin{align*}
+	c_j &= \begin{cases}
+		a_j - ib_j & 0\leq j \leq l-1 \\
+		a_{-j} + ib_{-j} & -l+1 \leq j < 0 \\
+		a_{j} & j=-l
+	\end{cases}
+\end{align*}
+
+{\hspace{-4 ex} \large \textbf{Appendix - Code listings}}\bigbreak
+
+\problem{5} Code for problem 5:
+\begin{lstlisting}
+from math import sin, cos, pi
+
+def left_hand_cos(m, j, k):
+	xs = [2*pi*i/m for i in range(m)]
+	ret = sum( [cos(k*xi)*cos(j*xi) for xi in xs] )
+	return 2/m * ret
+
+def right_hand_cos(m, j, k):
+	if k!=j:
+		return 0
+	elif 0<k<m/2 and 0<j<m/2:
+		return 1
+	elif (k==0 and j==0) or (j==m/2 and k==m/2):
+		return 2	
+
+def left_hand_sin(m, j, k):
+	xs = [2*pi*i/m for i in range(m)]
+	ret = sum( [sin(k*xi)*sin(j*xi) for xi in xs] )
+	return 2/m * ret
+
+def right_hand_sin(m, j, k):
+	if k!=j:
+		return 0
+	elif k==0 or j==0:
+		return 0
+	else:
+		return 1
+		
+ms = [4,6,8]
+my_sum = 0
+for m in ms:
+	for j in range(int(m/2)):
+		for k in range(int(m/2)):
+			my_sum += abs(left_hand_cos(m,j,k) - 
+					right_hand_cos(m,j,k))
+			my_sum += abs(left_hand_sin(m,j,k) -
+					right_hand_sin(m,j,k))
+print(my_sum)
+\end{lstlisting}
+
+\end{document}

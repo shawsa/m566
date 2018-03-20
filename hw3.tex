@@ -7,6 +7,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage{bm}
 \usepackage{enumitem}
 %\usepackage{dsfont}
 
@@ -32,6 +33,11 @@
 \renewcommand{\Im}{\operatorname{Im}}
 
 \newcommand{\solution}{\vspace{2 ex} \hspace{-5 ex} \emph{Solution.} }
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\renewcommand{\vec}[1]{\mathbf{#1}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,6 +74,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots}
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Hyperlinks
@@ -143,6 +152,89 @@ An iteration of Conjugate Gradient is about as expensive as a matrix vector mult
 We conclude that for this problem (and others that are similarly sparse) the Inexact Newton's method with Conjugate Gradient as the iterative step is faster by at least $\mathcal{O}(n)$ in theory.
 
 \bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\problem{15} We are given the non-linear equation $u(t) = \gamma_1 e^{\gamma_2t}$ and the following data
+\begin{center}
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		$i$&1&2&3\\ \hline
+		$t_i$&0.0&1.0&2.0\\ \hline
+		$z_i$&$e^{0.1}$&$e^{0.9}$&$e^{2}$\\ \hline
+	\end{tabular}
+\end{center}
+The formulae $u(t_i)=z_i$ for $i=1,2,3$ gives an over determined non-linear system, to which we apply the Gauss-Newton method for least squares. We first calculate the Jacobian to be
+$$
+\text{Jac}(\vec{x}) = \begin{bmatrix}
+\frac{\partial u}{\partial \gamma_1}(t_1) & \frac{\partial u}{\partial \gamma_2}(t_1) \\
+\frac{\partial u}{\partial \gamma_1}(t_2) & \frac{\partial u}{\partial \gamma_2}(t_2) \\
+\frac{\partial u}{\partial \gamma_1}(t_3) & \frac{\partial u}{\partial \gamma_2}(t_3)
+\end{bmatrix} = \begin{bmatrix}
+e^{\gamma_2t_1} & \gamma_1 t_1e^{\gamma_2t_1} \\
+e^{\gamma_2t_2} & \gamma_1 t_1e^{\gamma_2t_2} \\
+e^{\gamma_2t_3} & \gamma_1 t_1e^{\gamma_2t_3}
+\end{bmatrix}
+$$
+
+We then iteratively solve $\vec{p_k} = \argmin\limits_{\vec{p_k}} \norm{\text{Jac}(\vec{t})\vec{p_k} - (\vec{b}-\vec{u}(\vec{t}))}$ and update $\vec{x}_{k+1} = \vec{x_k} + \vec{p_k}$. A Python implementation can be found in the Appendix. The non-linear least squares solution is given by
+\begin{align*}
+\gamma_1 &= 0.9138539\\
+\gamma_2 & = 1.04343342
+\end{align*}
+Recall from problem 6.4 that the linear solution was $\gamma_1 = 1.0512711$ and $\gamma_2 = 0.95$
+\begin{align*}
+\gamma_1 &= 1.0512711\\
+\gamma_2 & = 0.95
+\end{align*}
+\bigbreak
+
+This solution and the Linear version from problem 6.4 are seen in figure (\ref{p15reg}) below. Using the eye-norm, it appears that the non-linear solution is a better fit, which is to be expected since the linear version does not minimize the sum of squares for the original data. The residual plot in figure (\ref{p15res}) confirms this additionally we've calculated that the magnitude of the residual vector in the Linear regression is 0.447 compared to 0.235 for our Non-Linear iterative method. \bigbreak
+
+At first it appears that there are two solutions. Figure (\ref{p15solu}) shows different solutions (red and gray) for different initial choice of starting parameters. The blue pixels represent areas that failed to converge (this was unexpected, there were overflow errors). The gray region are starting vectors that converge to the listed solution below. The red region denotes a local minimum where $\gamma_1=0$, but we dismiss it since it is a terrible fit. \bigbreak
+
+Figure (\ref{p15iter}) is a color map showing the number of iterations required for convergence at various initial parameter vectors. The maximum value (most red) is 38 for a few very poor initial guesses, but the majority of the initial guesses take very few iterations to converge. \bigbreak
+
+A final note is that it takes 8 iterations to converge when we use the old solution as an initial guess.
+
+\begin{figure}[H]
+	\caption{Linear and Non-Linear Least Squares}
+	\includegraphics[width=1\textwidth]{hwch9_p15_figure_2}
+	\label{p15reg}
+	\centering
+\end{figure}
+
+\begin{figure}[H]
+	\caption{Linear and Non-Linear Least Squares}
+	\includegraphics[width=1\textwidth]{hwch9_p15_figure_5}
+	\label{p15res}
+	\centering
+\end{figure}
+
+\begin{figure}[h]
+	\caption{Colormap denoting solutions for a given initial vector.}
+	\includegraphics[width=1\textwidth]{hwch9_p15_figure_3}
+	\label{p15solu}
+	\centering
+\end{figure}
+
+\begin{figure}[H]
+	\caption{Colormap denoting iterations to convergence for Non-linear least squares.}
+	\includegraphics[width=1\textwidth]{hwch9_p15_figure_4}
+	\label{p15iter}
+	\centering
+\end{figure}
+
+
+
+\bigbreak
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 {\hspace{-4 ex} \huge \textbf{Appendix - Code listings}}\bigbreak
@@ -305,6 +397,38 @@ U = u.reshape((N,N))
 plt.pcolormesh(X,Y,U, cmap=cm.coolwarm)
 \end{lstlisting}
 
+\problem{15}
+\begin{lstlisting}
+def goo(gamma1, gamma2, t):
+	return gamma1*np.exp(gamma2*t)
+goo = np.vectorize(goo)
 
+def my_solve(gamma, tol, max_iter=200):
+	t = np.array([[0],[1],[2]])
+	z = np.exp(np.array([[.1],[.9],[2]]))
+	
+	gamma = np.array(gamma).reshape((2,1))
+	gamma1 = gamma[0,0]
+	gamma2 = gamma[1,0]
+	
+	g = goo(gamma1, gamma2, t)
+	A = np.zeros((3,2))
+	A[:,0:1] = np.exp(gamma2*t)
+	A[:,1:2] = gamma1*t*np.exp(gamma2*t)
+	
+	for i in range(1,max_iter+1):
+		p = la.lstsq(A,z-g)[0]
+		if la.norm(p) < tol*(la.norm(gamma)+1):
+			break
+		gamma += p
+		gamma1 = gamma[0,0]
+		gamma2 = gamma[1,0]
+		g = goo(gamma1, gamma2, t)
+		A = np.zeros((3,2))
+		A[:,0:1] = np.exp(gamma2*t)
+		A[:,1:2] = gamma1*t*np.exp(gamma2*t)
+	
+	return gamma, i
+\end{lstlisting}
 
 \end{document}
