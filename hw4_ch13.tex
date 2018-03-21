@@ -103,7 +103,7 @@ From section 13.2 we are given that
 	a_k &= \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \cos(k x_\alpha) & \text{for }k&=0, 1, ..., l \\
 	b_k &= \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \sin(k x_\alpha) & \text{for }k&=0, 1, ..., l-1 \\
 \end{align*}
-Note that $lx_\alpha = l \frac{2\pi \alpha}{m} = \alpha \pi$ and thus $\sin(l x_\alpha) = 0$ for any integer alpha. We will define $b_l=0$ and notice that this definition extends the formula above to $k=0,...,l$. \\
+Note that $lx_\alpha = l \frac{2\pi \alpha}{m} = \alpha \pi$ and thus $\sin(l x_\alpha) = 0$ for any integer $\alpha$. We will define $b_l=0$ and notice that this definition extends the formula above to $k=0,...,l$. \\
 Suppose that $0 \leq j \leq l-1$. Also note that $\frac{1}{l} = \frac{2}{m}$. Then
 \begin{align*}
 	a_j - ib_j & = \frac{1}{l} \sum\limits_{\alpha=0}^{n} y_\alpha \cos(j x_\alpha) - i \frac{1}{l}\sum\limits_{\alpha=0}^{n} y_\alpha \sin(j x_\alpha) \\
@@ -130,7 +130,7 @@ Thus we have the relationship
 From these, it is easy to derive the reverse relationship
 \begin{align*}
 	a_j &= \begin{cases}
-		\frac{c_j + c_{-j}}{2} & 0 \leq j \leq l-1
+		\frac{c_j + c_{-j}}{2} & 0 \leq j \leq l-1 \\
 		c_{-l} & j=-l
 	\end{cases} \\
 	b_j &= \frac{c_j - c_{-j}}{2i}
