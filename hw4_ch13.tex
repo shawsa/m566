@@ -124,8 +124,16 @@ Thus we have the relationship
 	c_j &= \begin{cases}
 		a_j - ib_j & 0\leq j \leq l-1 \\
 		a_{-j} + ib_{-j} & -l+1 \leq j < 0 \\
-		a_{j} & j=-l
+		a_{l} & j=-l
 	\end{cases}
+\end{align*}
+From these, it is easy to derive the reverse relationship
+\begin{align*}
+	a_j &= \begin{cases}
+		\frac{c_j + c_{-j}}{2} & 0 \leq j \leq l-1
+		c_{-l} & j=-l
+	\end{cases} \\
+	b_j &= \frac{c_j - c_{-j}}{2i}
 \end{align*}
 
 {\hspace{-4 ex} \large \textbf{Appendix - Code listings}}\bigbreak
