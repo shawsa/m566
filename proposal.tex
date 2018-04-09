@@ -185,25 +185,24 @@ At a given point, it is reasonable to assume that the weights used to approximat
 	For simplicity we will not implement these algorithms on a sphere but rather on a disk and will focus on steady-state PDEs.
 	
 \section{Timeline and Challenges}
-	By the end of week 12 we expect to have implemented RBF-FD with stencils on a disk in serial and in parallel. We already have RBF-FD implemented with stencils in arbitrary two dimensional domains in serial. The computation of the differentiation matrix will be easy to parallelize, but the comunication between processes may prove challenging. A memory efficient implementation would have each process store only the portion of the matrix required for its calculations. We will find non-trivial problems for which there are known analytic solutions to compare accuracy.
+	By the end of week 13 we expect to have implemented RBF-FD with stencils on a disk in serial and in parallel. We already have RBF-FD implemented with stencils in arbitrary two dimensional domains in serial. The computation of the differentiation matrix will be easy to parallelize, but the communication between processes may prove challenging. A memory efficient implementation would have each process store only the portion of the matrix required for its calculations. We will find non-trivial problems for which there are known analytic solutions to compare accuracy.
 	
-	By the end of week 13 we expect to have implemented the technique using Polyharmonic Spline RBFs augmented with a polynomial basis functions similar to \cite{Flyer2016-1} and \cite{Flyer2017-2}. This should be a straightforward change, but we can always fall back to using simpler RBFs. Accuracy and convergence rates will compared to regular RBF-FD and to standard FD methods.
+	By the beginning of week 14 we will have submitted our progress report. By the end of week 14 we expect to have implemented the technique using Polyharmonic Spline RBFs augmented with a polynomial basis functions similar to \cite{Flyer2016-1} and \cite{Flyer2017-2}. This should be a straightforward change, but we will need to address stability. Accuracy and convergence rates will compared to regular RBF-FD and to standard FD methods.	
 	
-	
-	By the beginning of week 14 we will have submitted our progress report. The remaining time before our presentation (weeks 14 and 15) will be spent converting our algorithm to C with MPI. Up to this point, the algorithms will have been prototyped in Python so that they can be more easily tested and debugged. Implementing algorithms in C often has unanticipated difficulties and can be difficult to debug so we have set aside two whole weeks to work out the details and generate scaling results. 
+	Week 15 will be spent converting our algorithm to C with MPI and generating scaling results. Up to this point, the algorithms will have been prototyped in Python so that they can be more easily tested and debugged.
 	
 	If time permits there are several improvements to explore but all main results will be completed before the final presentation on the 27\textsuperscript{th} of April.
 	
 	\begin{table}
 		\caption{Timeline}
 		\begin{tabular}{ c| p{12cm}} 
-			Week 12 & Implement RBF-FD with stencils on a disk in serial and in parallel. Compare accuracy with other numerical techniques.\\
+			Week 13 & Implement RBF-FD with stencils on a disk in serial and in parallel. Compare accuracy with other numerical techniques.\\
 			& \\
-			Week 13 & Implement RBF-FD with stencils on a disk using PHS RBF with polynomial basis terms in serial and in parallel. Compare accuracy with other numerical techniques. \\
+			Week 14 & Progress report due. Implement RBF-FD with stencils on a disk using PHS RBF with polynomial basis terms in serial and in parallel. Compare accuracy with other numerical techniques. Assess stability. \\
 			&\\
-			Weeks 14 \& 15 & Progress report due. Implement in C using MPI. Produce scaling results. Presentation due.\\
+			Week 15 & Implement in C using MPI. Produce scaling results. Presentation due.\\
 			&\\
-			Time permitting &  Implement on GPU. Explore alternative domain decompositions. Reduce memory footprint.\\
+			Time permitting & Implement on GPU. Explore alternative domain decompositions. Reduce memory footprint.\\
 			Finals week & Report due.
 			
 		\end{tabular}
