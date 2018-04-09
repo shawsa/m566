@@ -89,9 +89,9 @@
 	\end{center}
 
 \section{Problem Statement} 
-Finite difference methods are numerical techniques for finding solutions to PDEs that approximate the solution on a mesh of points that are equally spaced across the domain. In situations where the desired points are not on a mesh, or when the domain does not lend itself to simple meshes, it is desirable to have mesh-free methods. Radial Basis Function Finite Differnence methods (RBF-FD) are such mesh-free methods. 
+Finite difference methods are numerical techniques for finding solutions to PDEs that approximate the solution on a mesh of points that are equally spaced across the domain. In situations where the desired points are not on a mesh, or when the domain does not lend itself to simple meshes, it is desirable to have mesh-free methods. Radial Basis Function Finite Difference methods (RBF-FD) are such mesh-free methods. 
 
-For this project we intend to explore parallelization of RBF-FD methods. We begin with a summary of standard finite differences applied to steady-state PDEs. We then compare with the basic RBF-FD method. 
+In this project we will explore current RBF-FD methods applied to solving steady-state PDEs on a disk with emphases on accuracy, stability, and parallelization.
 
 \subsection{Review of the standard Finite Difference Method} 
 The standard finite difference approach to solving PDEs relies on using a grid of points over the domain that have an equal spacing $h$ (the step size) in each direction. Taylor's theorem is used to generate finite difference formulae that approximate the derivative at a point in terms of the surrounding points. For example, consider the one dimensional steady state heat equation, $\frac{d^2u}{dx^2} = g(x)$. The second order finite difference approximation is given by
@@ -169,7 +169,7 @@ At a given point, it is reasonable to assume that the weights used to approximat
 \section{Existing Solutions}
 	The primary solution we will attempt to emulate is from Bollig, Flyer \& Erlebacher (2012)\cite{Bollig2012}. Here, they apply RBF-FD parallelized over muliple CPUs and GPUs. The domain of the problem is divided up among CPU-GPU pairs. The differentiation weights matrix is calculated once in serial and the weights for corresponding points, as well as the initial values at those points are then distributed to their CPU-GPU pairs. The CPUs handle synchronization and communication between processes and the GPUs are used to calculate the time-steps.
 	
-	Since 2012 there have been advancements in RBF-FD methods that were not available. In particular work has been done using particular RBFs that do not require a shape parameter but do require additional basis functions. This has been explored in 
+	Since 2012 there have been advancements in RBF-FD methods that were not available. Work has been done using particular RBFs that do not require a shape parameter but do require additional basis functions. This has been explored in 
 	Flyer et al.(2016)\cite{Flyer2016-1}\cite{Flyer2017-2} and in Barnett \& Wicker (2016)\cite{FlyerBarnettWicker2016}, however they did not implement their techniques in parallel.
 	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -182,10 +182,13 @@ At a given point, it is reasonable to assume that the weights used to approximat
 	
 	Their calculation of the differentiation matrix uses a technique that allows the approximation to exactly reproduce a constant. This method has been extended as in Flyer et al.\cite{Flyer2016-1}\cite{Flyer2017-2} to exactly reproduce polynomials up to a specified degree. This method also encourages the use of polyharmonic spline RBFs which don't require a shape parameter. We would like to incorporate these advancements.
 	
-\section{Timeline and Challenges}
-	By the end of week 12 we expect to have implemented RBF-FD with stencils on a spherical domain in serial and in parallel. We already have RBF-FD implemented with stencils in arbitrary two dimensional domains. Extending this to the sphere will simple for RBF-FD unlike regular finite differences since the method is largely independent of the domain and we have ways of generating nice pseudo-random points on spheres. The computation of the differentiation matrix will be easy to parallelize, but the comunication between processes may prove challenging. A memory efficient implementation would have each process store only the portion of the matrix required for its calculations. If this proves unrealistic we will fall back to the naive approach of storing the entire matrix on each process and perform the inter-process communication in the obvious way.
+	For simplicity we will not implement these algorithms on a sphere but rather on a disk and will focus on steady-state PDEs.
 	
-	By the end of week 13 we expect to have implemented the technique using Polyharmonic Spline RBFs augmented with a set of spherical harmonic basis functions similar to \cite{Flyer2016-1} and \cite{Flyer2017-2}. Where they used polynomial basis functions, we will use spherical harmonic basis functions. This is because the polynomial basis functions $1, x^2, y^2,$ and $z^2$ are linearly dependent on the surface of the sphere which would result in singular systems. This should be a straightforward change, but we can always fall back to using simpler RBFs.
+\section{Timeline and Challenges}
+	By the end of week 12 we expect to have implemented RBF-FD with stencils on a disk in serial and in parallel. We already have RBF-FD implemented with stencils in arbitrary two dimensional domains in serial. The computation of the differentiation matrix will be easy to parallelize, but the comunication between processes may prove challenging. A memory efficient implementation would have each process store only the portion of the matrix required for its calculations. We will find non-trivial problems for which there are known analytic solutions to compare accuracy.
+	
+	By the end of week 13 we expect to have implemented the technique using Polyharmonic Spline RBFs augmented with a polynomial basis functions similar to \cite{Flyer2016-1} and \cite{Flyer2017-2}. This should be a straightforward change, but we can always fall back to using simpler RBFs. Accuracy and convergence rates will compared to regular RBF-FD and to standard FD methods.
+	
 	
 	By the beginning of week 14 we will have submitted our progress report. The remaining time before our presentation (weeks 14 and 15) will be spent converting our algorithm to C with MPI. Up to this point, the algorithms will have been prototyped in Python so that they can be more easily tested and debugged. Implementing algorithms in C often has unanticipated difficulties and can be difficult to debug so we have set aside two whole weeks to work out the details and generate scaling results. 
 	
@@ -194,11 +197,11 @@ At a given point, it is reasonable to assume that the weights used to approximat
 	\begin{table}
 		\caption{Timeline}
 		\begin{tabular}{ c| p{12cm}} 
-			Week 12 & Implement RBF-FD with stencils on a spherical domain in serial and in parallel.\\
+			Week 12 & Implement RBF-FD with stencils on a disk in serial and in parallel. Compare accuracy with other numerical techniques.\\
 			& \\
-			Week 13 & Implement RBF-FD with stencils on a spherical domain using PHS RBF with spherical harmonic basis terms in serial and in parallel. \\
+			Week 13 & Implement RBF-FD with stencils on a disk using PHS RBF with polynomial basis terms in serial and in parallel. Compare accuracy with other numerical techniques. \\
 			&\\
-			Weeks 14 \& 15 & Progress report due. Explore improvements to parallelization. Implement in C using MPI. Produce scaling results. Presentation due.\\
+			Weeks 14 \& 15 & Progress report due. Implement in C using MPI. Produce scaling results. Presentation due.\\
 			&\\
 			Time permitting &  Implement on GPU. Explore alternative domain decompositions. Reduce memory footprint.\\
 			Finals week & Report due.
