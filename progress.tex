@@ -97,8 +97,7 @@ The parallelization has had some design challenges. Parallelizing the formulatio
 	
 	By the end of this week I will have generated error plots and started to write about accuracy and stability of RBF-FD with PHS compared with both classical finite difference methods and RBF-FD using a shape parameter. 
 	
-	\begin{table}
-		\caption{Original Timeline}
+	\begin{table}[hb]
 		\begin{tabular}{ c| p{12cm}} 
 			Week 13 & Implement RBF-FD with stencils on a disk in serial and in parallel. Compare accuracy with other numerical techniques.\\
 			& \\
@@ -108,9 +107,8 @@ The parallelization has had some design challenges. Parallelizing the formulatio
 			&\\
 			Time permitting & Implement on GPU. Explore alternative domain decompositions. Reduce memory footprint.\\
 			Finals week & Report due.
-			
 		\end{tabular}
-		
+		\caption{Original Timeline}
 	\end{table}
 	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,16 +120,26 @@ The parallelization has had some design challenges. Parallelizing the formulatio
 	
 	Otherwise I have made excellent progress. I've thought through the difficulties of doing quick matrix-vector multiplications in parallel and the dot product in parallel. 
 	
-\subsection{Matrix-Vector Multipication \& Point Ordering}
-	The parallel solvers I am familiar with rely on the ability to do quick matrix vector multiplication. Generally this is done by partitioning the rows of the matrix and vector among the processes operating on them. Consider the matrix with the sparsity pattern indicated in figure \ref{no_order_spy}. If this matrix were to be distributed over two processes the first process would be allocated the first ten rows and the second process would be allocated the remaining ten rows. If we were to multiply this matrix with a vector the first process would need to know all but the last two entries in the vector. If we instead consider the same matrix reordered using the reverse-Cuthill-McKee ordering as seen in figure \ref{rcm_order_spy} we can see that the first process needs only the first ten values in the vector (which it is expected to have) and only four of the next ten values which will need to be transmitted from the second process.
+\subsection{Matrix-Vector Multiplication \& Point Ordering}
+	The parallel solvers I am familiar with rely on the ability to do quick matrix vector multiplication. Generally this is done by partitioning the rows of the matrix and vector among the processes operating on them. Consider the matrix with the sparsity pattern indicated on the left in figure \ref{matrix_spy}. If this matrix were to be distributed over two processes the first process would be allocated the first ten rows and the second process would be allocated the remaining ten rows. If we were to multiply this matrix with a vector the first process would need to know all but the last two entries in the vector. If we instead consider the same matrix reordered using the reverse-Cuthill-McKee ordering as seen on the right in figure \ref{matrix_spy} we can see that the first process needs only the first ten values in the vector (which it is expected to have) and only four of the next ten values which will need to be transmitted from the second process.
+	
+	\begin{figure}[ht]
+		\centering
+		\begin{tabular}{cc}
+			\includegraphics[width=.4\textwidth]{no_order_spy.eps} & \includegraphics[width=.4\textwidth]{rcm_order_spy.eps} \\
+			Unordered & RCM Ordering \\
+		\end{tabular}
+		\caption{Four ways to partition the disk with equal area.}
+		\label{matrix_spy}
+	\end{figure}
 	
 	While the differentiation matrix is unknown beforehand, we do know its sparsity pattern. Each row consists of the weights of the stencil centered at the corresponding point, and only the nearest neighbors are considered. If all of the rows corresponding to these nearest neighbors are allocated to the same process, then the calculation of this row will only need vector values already stored on this process. 
 	
 	\begin{figure}[ht]
 		\centering
 		\includegraphics[width=.75\textwidth]{nearest_2proc_disk.eps}
-		\label{nearest_2proc_disk}
 		\caption{Partitioning of the domain }
+		\label{nearest_2proc_disk}
 	\end{figure}
 	
 	Suppose that we partition the unit disk along the $y$-axis so that all points on the right are allocated to process one and the rest are allocated to process two. This can be seen in figure \ref{nearest_2proc_disk} where process one is responsible for the red and black points and process two is responsible for the rest. The green points denote points belonging to process two, but who are nearest neighbors to points in process one. Thus, process one will need to know the vector values corresponding to the green points in order to calculate the matrix vector product. 
@@ -146,8 +154,8 @@ The parallelization has had some design challenges. Parallelizing the formulatio
 			\includegraphics[width=.4\textwidth]{disk_decomp_cake.eps} & \includegraphics[width=.4\textwidth]{disk_decomp_triangle.eps} \\
 			Cake-cutting & Triangle-cutting
 		\end{tabular}
-		\label{decomp_strategies}
 		\caption{Four ways to partition the disk with equal area.}
+		\label{decomp_strategies}
 	\end{figure}
  
 	 Figure \ref{decomp_strategies} shows four possible geometric partitions of the unit disk into four equal area sections. Given a particular partition it would be advantageous to order the points (and hence the rows and columns of the matrix) so that for each partition the nodes that are shared with a neighboring process are contiguous in memory. The length of the shared boundary between two processes will be proportional to the number of points that need to be shared and thus should be minimized. The number of adjacent processes to a given process will determine how many times communication must be initiated for a given process and should also be minimized. 
@@ -162,8 +170,7 @@ The parallelization has had some design challenges. Parallelizing the formulatio
 	Your suggestion to transform the system from $D\vec{u} = \vec{f}$ to $D^TD\vec{u} = D^T\vec{f}$ forcing the matrix $D^TD$ to be SPD so that we may use CG looks to be the easiest work around. There are two main disadvantages to this however. The first is that the condition number of $D^TD$ will be much larger than the condition number of $D$ which will significantly lower the maximum size of the system that will still give good numerical solutions to the PDE. The second drawback is that $D^TD$ will be significantly less sparse than $D^T$ making iterations more expensive.
 	
 	While this solution will be easier than the alternatives, it will still prove challenging. Our matrix will be stored in a compressed format making the formulation of the transpose more complicated.
-	  
- 
+	
 % \bigbreak
 \pagebreak
  
