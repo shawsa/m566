@@ -1,0 +1,142 @@
+\documentclass[12pt]{article}
+
+%***************************************************************************************************
+% Math
+\usepackage{fancyhdr} 
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+%\usepackage{dsfont}
+
+%***************************************************************************************************
+% Macros
+\usepackage{calc}
+
+%***************************************************************************************************
+% Commands and Custom Variables	
+\newcommand{\problem}[1]{\hspace{-4 ex} \large \textbf{Problem #1} }
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\sint}{\text{s}\kern-5pt\int}
+\newcommand{\powerset}{\mathcal{P}}
+\renewenvironment{proof}{\hspace{-4 ex} \emph{Proof}:}{\qed}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\CC}{\mathbb{C}}
+
+\let\vec\mathbf
+
+
+%***************************************************************************************************
+%page
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+%\doublespacing
+\allowdisplaybreaks
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Shaw \space \thepage}
+%\setlength\parindent{0pt}
+
+%***************************************************************************************************
+%Code
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+	language=Python,
+	showstringspaces=false,
+	formfeed=newpage,
+	tabsize=4,
+	commentstyle=\itshape,
+	basicstyle=\ttfamily,
+}
+
+%***************************************************************************************************
+%Images
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{float}
+
+
+\title{Project Proposal\\ \large Solving PDEs using Radial Basis Function Finite Difference Methods in Parallel}
+\author{Student: Sage Shaw\\ Advisor: Prof. Grady Wright}
+\date{April 2, 2018}
+
+%\renewcommand{\abstractname}{Overview}
+
+\usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
+\addbibresource{pre-proposal.bib}
+%\bibliography{SRF}
+
+
+\begin{document}
+	\thispagestyle{empty}
+	
+	
+\section{FD intro}
+
+$$
+\nabla^2u_{i,j} \approx \frac{1}{h^2}\left( u_{i-1,j} + u_{i+1, j} + u_{i, j-1} +u_{i, j+1} - 4u_{i,j} \right)
+$$
+
+\begin{align*}
+	\nabla^2u_{1} & \approx \sum_{n=1}^6 \omega_n u_n \\
+	Lu_{1} & \approx \sum_{n=1}^6 \omega_n u_n
+\end{align*}
+
+$$
+\text{Error} = \mathcal{O}(h^2)
+$$
+
+$$
+\text{Error} = \mathcal{O}(N^{-1})
+$$
+
+	
+\section{Solving the System}
+
+$$
+\rho(A) \nless 1
+$$	
+
+\section{RBF-FD Proof}
+$$
+\begin{bmatrix}
+	\phi_1(\vec{x}_1) & \phi_2(\vec{x}_1) & \phi_3(\vec{x}_1) & \dots & \phi_n(\vec{x}_1) \\
+	\phi_1(\vec{x}_2) & \phi_2(\vec{x}_2) & \phi_3(\vec{x}_2) & \dots & \phi_n(\vec{x}_2) \\
+	\phi_1(\vec{x}_3) & \phi_2(\vec{x}_3) & \phi_3(\vec{x}_3) & \dots & \phi_n(\vec{x}_3) \\
+	\vdots 		& \vdots 	  & \vdots 		& \ddots& \vdots \\
+	\phi_1(\vec{x}_n) & \phi_2(\vec{x}_n) & \phi_3(\vec{x}_n) & \dots & \phi_n(\vec{x}_n)
+\end{bmatrix}
+\begin{bmatrix}
+	\omega_1 \\ \omega_2 \\ \omega_3 \\ \vdots \\ \omega_n
+\end{bmatrix}
+=
+\begin{bmatrix}
+	L\phi_1(\vec{y}) \\ L\phi_2(\vec{y}) \\ L\phi_3(\vec{y}) \\ \vdots \\ L\phi_n(\vec{y})
+\end{bmatrix}
+$$
+$$
+\sum_{k=1}^n \omega_k\phi_k(\vec{x}_i) = L\phi_i(\vec{y}) \text{\phantom{==} for } i=1,2,...,n
+$$
+
+$$
+\{\vec{x}_i\}_{i=1}^n
+$$
+$$
+\{u_i\}_{i=1}^n
+$$
+
+$$
+\sum_{i=1}^n c_i \phi_i(\vec{x}_k) = u(\vec{x}_k) \phantom{=} \forall k
+$$
+$$
+\sum_{i=1}^n c_i \phi_i(\vec{y}) = u(\vec{y})
+$$
+
+
+\end{document}
