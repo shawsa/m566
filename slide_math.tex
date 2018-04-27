@@ -8,6 +8,7 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 %\usepackage{dsfont}
+\usepackage{color}
 
 %***************************************************************************************************
 % Macros
@@ -96,6 +97,41 @@ $$
 \text{Error} = \mathcal{O}(N^{-1})
 $$
 
+
+
+\section{Generating weights}
+$$
+Lu(\vec{y}) \approx \sum_{k=1}^n \omega_k u(\vec{x}_k)
+$$
+
+$$
+\sum\limits_{k=1}^n \omega_k\phi_k(\vec{x}_i) + \sum\limits_{j=1}^d \lambda_j p_j(\vec{x}_i) = L\phi_i(\vec{y}) 
+$$
+
+$$
+\{p_k(\vec{x})\}_{k=1}^d = 1, x, y, x^2, xy, y^2, x^3, x^2y, \dots
+$$
+
+$$
+\sum\limits_{k=1}^n \omega_k p_i(\vec{x}_k) = Lp_i(\vec{x})\vert_{\vec{x}=\vec{y}}
+$$
+
+$\text{for } i=1,2,...,n$
+
+$$
+\phi_k(\vec{x}) = \phi(\norm{ \vec{x} - \vec{x}_k) }
+$$
+
+$\text{for } i=1,2,...,d$
+
+\begin{align*}
+	\phi(r) & = r^3 \\
+	\phi(r) & = r^4 \ln(r) \\
+	\phi(r) & = r^5 \\
+	\phi(r) & = r^6 \ln(r) \\
+	& \vdots
+\end{align*}
+
 	
 \section{Solving the System}
 
@@ -121,8 +157,10 @@ $$
 \end{bmatrix}
 $$
 $$
-\sum_{k=1}^n \omega_k\phi_k(\vec{x}_i) = L\phi_i(\vec{y}) \text{\phantom{==} for } i=1,2,...,n
+\sum_{k=1}^n \omega_k\phi_k(\vec{x}_i) = L\phi_i(\vec{y}) 
 $$
+
+$\text{\phantom{==} for } i=1,2,...,n$
 
 $$
 \{\vec{x}_i\}_{i=1}^n
@@ -135,7 +173,30 @@ $$
 \sum_{i=1}^n c_i \phi_i(\vec{x}_k) = u(\vec{x}_k) \phantom{=} \forall k
 $$
 $$
-\sum_{i=1}^n c_i \phi_i(\vec{y}) = u(\vec{y})
+\sum_{=k}^n c_i \phi_i(\vec{y}) = u(\vec{y})
+$$
+
+\section{Parallelism}
+$$
+\begin{bmatrix}
+	{\color{red} A_{11} } & {\color{red} A_{12} } & {\color{red} A_{13} } & {\color{red} A_{14} }\\
+	{\color{green} A_{21} } & {\color{green} A_{22} } & {\color{green} A_{23} } & {\color{green} A_{24} } \\
+	{\color{blue} A_{31} } & {\color{blue} A_{32} } & {\color{blue} A_{33} } & {\color{blue} A_{34} } \\
+	{\color{black} A_{41} } & {\color{black} A_{42} } & {\color{black} A_{43} } & {\color{black} A_{44} } \\
+\end{bmatrix}
+\begin{bmatrix}
+	{\color{red} \vec{x}_{1} } \\
+	{\color{green} \vec{x}_{2} } \\
+	{\color{blue} \vec{x}_{3} } \\
+	{\color{black} \vec{x}_{3} } 
+\end{bmatrix}
+=
+\begin{bmatrix}
+	{\color{red} \vec{b}_{1} } \\
+	{\color{green} \vec{b}_{2} } \\
+	{\color{blue} \vec{b}_{3} } \\
+	{\color{black} \vec{b}_{3} }
+\end{bmatrix}
 $$
 
 
