@@ -106,22 +106,30 @@ $$
 \section{RBF-FD Proof}
 $$
 \begin{bmatrix}
-	\phi_1(\vec{x}_1) & \phi_2(\vec{x}_1) & \phi_3(\vec{x}_1) & \dots & \phi_n(\vec{x}_1) \\
-	\phi_1(\vec{x}_2) & \phi_2(\vec{x}_2) & \phi_3(\vec{x}_2) & \dots & \phi_n(\vec{x}_2) \\
-	\phi_1(\vec{x}_3) & \phi_2(\vec{x}_3) & \phi_3(\vec{x}_3) & \dots & \phi_n(\vec{x}_3) \\
-	\vdots 		& \vdots 	  & \vdots 		& \ddots& \vdots \\
-	\phi_1(\vec{x}_n) & \phi_2(\vec{x}_n) & \phi_3(\vec{x}_n) & \dots & \phi_n(\vec{x}_n)
+	\phi_1(\vec{x}_1) & \phi_2(\vec{x}_1) & \dots & \phi_n(\vec{x}_1) & 1 & x_1 & y_1 \\
+	\phi_1(\vec{x}_2) & \phi_2(\vec{x}_2) & \dots & \phi_n(\vec{x}_2) & 1 & x_2 & y_2 \\
+	\vdots 		& \vdots	& \ddots& \vdots & \vdots& \vdots& \vdots& \\
+	\phi_1(\vec{x}_n) & \phi_2(\vec{x}_n) & \dots & \phi_n(\vec{x}_n) & 1 & x_1 & y_1 \\
+	1 & 1 & \dots & 1 & 0 & 0 & 0\\
+	x_1 & x_2 & \dots & x_n & 0 & 0 & 0\\
+	y_1 & y_2 & \dots & y_n & 0 & 0 & 0\\
 \end{bmatrix}
 \begin{bmatrix}
-	\omega_1 \\ \omega_2 \\ \omega_3 \\ \vdots \\ \omega_n
+	\omega_1 \\ \omega_2 \\ \vdots \\ \omega_n \\
+	\lambda_1 \\ \lambda_2 \\ \lambda_3
 \end{bmatrix}
 =
 \begin{bmatrix}
-	L\phi_1(\vec{y}) \\ L\phi_2(\vec{y}) \\ L\phi_3(\vec{y}) \\ \vdots \\ L\phi_n(\vec{y})
+	L\phi_1(\vec{y}) \\ L\phi_2(\vec{y}) \\ \vdots \\ L\phi_n(\vec{y}) \\
+	1 \\ 0 \\ 0 
 \end{bmatrix}
 $$
 $$
-\sum_{k=1}^n \omega_k\phi_k(\vec{x}_i) = L\phi_i(\vec{y}) \text{\phantom{==} for } i=1,2,...,n
+\sum\limits_{k=1}^n \omega_k\phi_k(\vec{x}_i) + \sum\limits_{k=1}^d \lambda_k p_k(\vec{x}_i) = L\phi_i(\vec{y}) \text{\phantom{==} for } i=1,2,...,n
+$$
+
+$$
+\sum\limits_{k=1}^n \omega_k p_i(\vec{x}_i) = Lp_i(\vec{x}) \vert_{\vec{x}=\vec{y}} \text{\phantom{==} for } i=1,2,...,n
 $$
 
 $$
