@@ -6,6 +6,8 @@ from halton import halton_sequence
 from scipy.spatial import cKDTree
 from array import array
 
+from random import random
+
 def halton(n):
     inner_nodes = halton_sequence(1,n,2).T
     inner_nodes = [(np.sqrt(x)*np.cos(2*np.pi*y), 
@@ -29,6 +31,11 @@ def gen_points(n, n_boundary, dist='vogel', boundary_dist='vogel', sorting='x'):
         inner_nodes = vogel(n)
     elif dist == 'halton':
         inner_nodes = halton(n)
+    elif dist == 'random':
+        inner_nodes = [(random(), random()) for i in range(n)]
+        inner_nodes = [(np.sqrt(x)*np.cos(2*np.pi*y), 
+                             np.sqrt(x)*np.sin(2*np.pi*y)) 
+                            for (x,y) in inner_nodes]
     else:
         raise ValueError('dist=' + dist + ' not recognized')
 

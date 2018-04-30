@@ -31,24 +31,7 @@ def poly_basis(k, node):
             ret += [lambda x, i=i, deg=deg, : (x[0]-x0)**(deg-i) * (x[1]-y0)**i]
         deg += 1
     return ret[:k]
-'''
-def poly_basis_L(k):
-    ret = []
-    deg = 0
-    while len(ret)<k:
-        for i in range(deg+1):
-            ret += [lambda x, i=i, deg=deg, : 
-                      (deg-i)*(deg-i-1)*x[0]**(deg-i-2) * x[1]**i 
-                    + x[0]**(deg-i) * i*(i-1)*x[1]**(i-2)
-                   ]
-        deg += 1
-    #testing Center evauluation of Lp(x,y) at x,y. Simplifies to 1 and 0s.
-    ret = [lambda x: 1]
-    while len(ret)<k:
-        ret += [lambda x: 0]
-    #end testing
-    return ret[:k]
-'''
+
 #**************************************************************************
 #
 # RBFs
@@ -117,6 +100,7 @@ def gen_system(inner_nodes, boundary_nodes, l, pdim, rbf_tag='r^3', boundary=bou
         rhs = np.block([rhs.ravel(), rhsp.ravel()])
 
         weights[r] = (la.pinv(AP)@rhs)[:l]
+        #weights[r] = la.solve(AP,rhs)[:l]
         col_index[r] = n_index
         
     C = sp.csc_matrix((weights.ravel(), (row_index, col_index.ravel())),shape=(n,n+n_b))
