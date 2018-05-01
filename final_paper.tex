@@ -8,6 +8,7 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 %\usepackage{dsfont}
+\usepackage{color}
 
 %***************************************************************************************************
 % Macros
@@ -90,7 +91,7 @@
 
 \textbf{Jodi's Feedback}
 
-\textit{Proprosal}: Since your project will have a different focus than what is outlined here, be sure to include appropriate references ﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿in the report.﻿﻿
+\textit{Proprosal}: Since your project will have a different focus than what is outlined here, be sure to include appropriate references ﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿in the report.﻿﻿
 
 This text in the ﻿﻿﻿proposal ﻿﻿will be good in the report to explain how the system in generated, and the discussion on parallelism will motivate why you find some solvers more advantageous than others.
 
@@ -122,6 +123,8 @@ Once you have done an initial "tour" of methods, then incorporate the different 
 \tableofcontents
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
 \subsection{Review of Classical Finite Difference Methods} 
@@ -146,7 +149,7 @@ C =
 \end{align*}
 We can rewrite our PDE more generally as $L(u(x))=g(x)$ where $L$ is a linear differential operator. Here the matrix $C$ is a discrete approximation of $L$ in the same sense that $\vec{u}$ is an approximation of $u(x)$ at the grid points.
 
-\subsection{Overview of RBF-FD}	
+\subsection{Overview of RBF-FD}	\label{sec_overview_rbffd}
 As discussed in Fornberg \& Flyer (2015)\cite{Fornberg2015} the RBF-FD method generalizes this idea. We forgo the mesh in favor of an arbitrary set of distinct points $\{x_i\}_{i=1}^n$. We then would like to form the linear system $C\vec{u} = \vec{g}$ so that $C$ approximates $L$ at each point in our set. Here $C$ is not derived from a finite difference formula, but instead computed. We choose a set of basis functions $\{\phi_j\}_{j=1}^n$ and ensure that for every point $x_i$
 \begin{align}
 L(\phi_j)(x_i) = \sum\limits_{j=1}^{n} c_{i,j} \phi_j(x_i) \phantom{===} \text{for } j=1,...,n \label{row_coef}
@@ -198,29 +201,252 @@ At a given point, it is reasonable to assume that the weights used to approximat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methods}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Generating and Ordering Points}
+	The method can be separated into three separate steps: generating points, forming the differentiation matrix, and either solving the resulting sparse system or use it to step through time-dependent problems. While Bollig, Flyer, and Erlebacher implement time stepping in parallel over multiple CPUs and GPUs in~\cite{Bollig2012}, they did not parallelize the calculation of the differentiation matrix. In addition to this, Flyer et al. \cite{Flyer2016-1}\cite{Flyer2017-2} and Barnett \& Wicker \cite{FlyerBarnettWicker2016} explored using polyharmonic splines in RBF-FD, but they did not implement their techniques in parallel.
+	
+	For this project, we wanted to parallelize generating the differentiation matrix in the RBF-FD method using polyharmonic spline RBF kernels augmented with polynomial basis terms. The choice of points has a large effect on these later two steps however, so a discussion on their generation is in order.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Generating the Differentiation Matrix}
+\subsection{Generating and Ordering Points}
+The first step is to choose a set of points on which to approximate the solution. Classical finite difference methods require points to be from a uniform grid over the domain. This is limiting in that it requires the number of points to be an integer power of the dimension of the domain (before applying a mask to remove points outside of the domain) and that it requires the points to be at particular locations. For RBF-FD we are completely unrestricted. The freedom to choose the number of points is purely beneficial, and it is particularly nice that it does not rely on the dimensions of the space, however the freedom to choose points arbitrarily begs the question: what are the best points to choose?
+
+The theory suggests that the points should sample the entire domain. The choice to use polynomial basis terms adds restrictions to the choice of points. If all the points in a particular stencil lie along a line for example, the $1, x$, and $y$ columns will be linearly dependent. This would suggest to the use of a random set of points, to mach such linear dependencies unlikely. 
+
+It is desirable to have the distances between points in the stencil somewhat regular however. Consider fixing all points except one. Then as the free point approaches one of the points in its stencil, the corresponding column in the stencil matrix will approach the first column in the matrix (corresponding to the free point at the stencil center) thus making the matrix increasingly ill-conditioned. In other words, we would like the distances between points to vary but not by significant orders of magnitude. The pseudorandom Halton \cite{Halton1960} points do this job nicely. These points are generated by a process involving primes to distributed them accross the unit square. We then map them to the disk by the area-preserving transformation $f(x, y) = \langle \sqrt{x}\cos(2\pi y), \sqrt{x}\sin(2 \pi y) \rangle$.
+
+
+In figure \ref{randomhalton} can be seen one hundred points chosen randomly on the left and one hundred Halton points (generated by \cite{Burkardt2016}) on the right. The Halton points appear random but also avoid clustering.
+
+\begin{figure}[ht]
+	\centering
+	\begin{tabular}{cc}
+		\includegraphics[width=.5\textwidth]{random_100_disk.eps} & \includegraphics[width=.5\textwidth]{halton_100_disk.eps} \\
+	\end{tabular}
+	\caption{Random points (left) and pseudorandom Halton points (right) on the unit disk.}
+	\label{randomhalton}
+\end{figure}
+
+Another option we explored was using the Vogel nodes as seen in figure \ref{vogel}. These points are more uniformly spaced but seem to be more regular. They are generated by choosing points on a spiral defined as
+
+$$
+\vec{x}_i = \left( \sqrt{\frac{i}{n}}\cos(i\hat{\theta}), \sqrt{\frac{i}{n}}\sin(i\hat{\theta})  \right) \phantom{==}\text{for } i = 1, 2, \dots, n
+$$
+where the constant $\hat{\theta} = \pi (3-\sqrt{5})$. Their spiral nature becomes more obvious as the number of points is increased. The bottom of figure \ref{vogel} shows one thousand Vogel nodes on the unit dist.
+
+\begin{figure}[ht]
+	\centering
+	\begin{tabular}{ccc}
+		\includegraphics[width=.3\textwidth]{vogel_no_spiral.png} & \includegraphics[width=.3\textwidth]{vogel_spiral.png} &
+		%\multicolumn{2}{c}{
+		\includegraphics[width=.3\textwidth]{vogel_1000_disk.eps} 
+		%}\\
+	\end{tabular}
+	\caption{One hundred Vogel nodes on the unit disk (top left), the spiral used to generate them (top right), and one thousand Vogel nodes on the unit disk (bottom).}
+	\label{vogel}
+\end{figure}
+
+Once the points are chosen we use a KD-tree to calculate nearest neighbors. Once the weights are generated they form a sparse matrix. In general the sparsity will not follow a particular pattern. The first point in the list may be near to the fifth, twentieth, or two hundredth points. The first column in figure \ref{orderings} shows the sparsity pattern for our three point distributions.
+
+These sparsity patterns become important when we parallelize matrix-vector multiplication. If a matrix system is to be divided up among four processes it is natural to chuck the matrix and vectors up along contiguous rows as seen in the sparsity pattern and in the coloring of the block matrix below.
+
+$$
+\begin{bmatrix}
+{\color{red} A_{11} } & {\color{red} A_{12} } & {\color{red} A_{13} } & {\color{red} A_{14} }\\
+{\color{green} A_{21} } & {\color{green} A_{22} } & {\color{green} A_{23} } & {\color{green} A_{24} } \\
+{\color{blue} A_{31} } & {\color{blue} A_{32} } & {\color{blue} A_{33} } & {\color{blue} A_{34} } \\
+{\color{black} A_{41} } & {\color{black} A_{42} } & {\color{black} A_{43} } & {\color{black} A_{44} } \\
+\end{bmatrix}
+\begin{bmatrix}
+{\color{red} \vec{x}_{1} } \\
+{\color{green} \vec{x}_{2} } \\
+{\color{blue} \vec{x}_{3} } \\
+{\color{black} \vec{x}_{3} } 
+\end{bmatrix}
+=
+\begin{bmatrix}
+{\color{red} \vec{b}_{1} } \\
+{\color{green} \vec{b}_{2} } \\
+{\color{blue} \vec{b}_{3} } \\
+{\color{black} \vec{b}_{3} }
+\end{bmatrix}
+$$
+\begin{center}
+	\includegraphics[width=.5\textwidth]{spy_halton_chunked.eps}
+\end{center}
+
+
+%\begin{wrapfigure}[5]{r}{0.5\textwidth}
+%\begin{center}
+%        \includegraphics[width=0.5\textwidth]{spy_halton_chunked.eps}
+%\end{center}
+%    \caption{A gull}
+%\end{wrapfigure}
+%\begin{figure}[Hb]
+%	\centering
+%\begin{tabular}{cc}
+
+%&
+%\includegraphics[width=.4\textwidth]{spy_halton_chunked.eps}
+%\end{tabular}
+%\caption{One hundred Vogel nodes on the unit disk (top left), the spiral used to generate them (top right), and one thousand Vogel nodes on the unit disk (bottom).}
+%\label{halton_chunked}
+%\end{figure}
+
+
+
+If the red process has the matrices $A_{11}, A_{12}, A_{13}, A_{14}$, and the vector $\vec{x}_1$ stored in memory, then in order to calculate $\vec{b}_1$ it will need need to communicate with the green, blue, and black processes to get the vectors $\vec{x}_2, \vec{x}_3$, and $\vec{x}_4$ respectively. This communication is expensive and can be reduced by taking advantage of the geometry of the problem.
+
+Consider dividing the domain among two processes vertically so that process one is responsible for nodes in the right half-plane and process two is responsible for nodes in the left half plane. Figure \ref{dsik_two_proc} illustrates this, where process one is responsible for the red nodes and process two is responsible for the blue nodes and the green nodes. Some of the points in the left half plane will be nearest neighbors of points in the right half plane (depicted in green). It would be advantageous if each process had it's nodes organized so all of the values that needed to be shared with neighboring processes were contiguous in memory. These green nodes would correspond to non-zero entries outside of the diagonal blocks of the matrix.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=.75\textwidth]{nearest_2proc_disk.eps}
+	\caption{Partitioning of the domain }
+	\label{dsik_two_proc}
+\end{figure}
+
+Figure \ref{decomp_strategies} shows four ways to divide the disk into equal area domains. When the points are ordered according to color the off diagonal blocks of the differentiation matrix are very sparse or even empty. For example, the stripes pattern at the top left of figure \ref{decomp_strategies} would result in the red-black and black-red blocks of the matrix being completely empty since no red point is a nearest neighbor of a black point and vice versa. 
+
+\begin{figure}[ht]
+	\centering
+	\begin{tabular}{cc}
+		\includegraphics[width=.4\textwidth]{disk_decomp_strips.eps} & \includegraphics[width=.4\textwidth]{disk_decomp_quad.eps} \\
+		Stripes & Quadrants \\
+		\includegraphics[width=.4\textwidth]{disk_decomp_cake.eps} & \includegraphics[width=.4\textwidth]{disk_decomp_triangle.eps} \\
+		Cake-cutting & Triangle-cutting
+	\end{tabular}
+	\caption{Four ways to partition the disk with equal area.} \label{decomp_strategies}
+\end{figure}
+
+These decomposition strategies lead to a trade off. When the partitions are separated (as the red and black are in the Stripes and Cake-Cutting patterns) they will not need to communicate nearest neighbors (provided the stencil doesn't get too large). The amount of data that needs to be communicated is  proportional to the length of the boundaries between processes. Since initiating communications has a high overhead in MPI and the overhead increases only marginally as the amount of data increases, we have decided to focus on the Stripes pattern. A stronger condition than ordering the points along colors of equal area vertical stripes is to order them in order of increasing $x$ value. This is far simpler to code and can be done in $\mathcal{O}(n\log n)$ time on average. 
+
+Lastly there is an ordering called the Reverse Cuthill-McKee that is a general ordering scheme for sparse matrices. Since we were trying to reduce the bandwidth of the matrix we visually compared the sparsity pattern to that of the $x$-ordering. The results can be seen in figure \ref{orderings}.
+
+\begin{figure}[ht]
+	\centering
+	\begin{tabular}{cc}
+		Random & \begin{tabular}{ccc}
+			Unordered & $x$ Ordering & RCM Ordering \\
+			\includegraphics[width=.2\textwidth]{spy_random_unordered.png} &
+			\includegraphics[width=.2\textwidth]{spy_random_xorder.png} &
+			\includegraphics[width=.2\textwidth]{spy_random_rcm.png} \end{tabular} \\
+		Halton & \begin{tabular}{ccc}
+			\includegraphics[width=.2\textwidth]{spy_halton_unordered.png} &
+			\includegraphics[width=.2\textwidth]{spy_halton_xorder.png} &
+			\includegraphics[width=.2\textwidth]{spy_halton_rcm.png} \end{tabular} \\
+		Vogel & \begin{tabular}{ccc}
+			\includegraphics[width=.2\textwidth]{spy_vogel_unordered.png} &
+			\includegraphics[width=.2\textwidth]{spy_vogel_xorder.png} &
+			\includegraphics[width=.2\textwidth]{spy_vogel_rcm.png}  \end{tabular} \\
+	\end{tabular}
+	\caption{Sparsity pattern for weight matrix with 100 interior nodes and a stencil size of 20 nearest neighbors under different point distributions and orderings.}
+	\label{orderings}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Forming the Differentiation Matrix}
+
+	Once the points are chosen we pass over each point and construct a stencil of nearest neighbors. Our implementation uses a KD-tree from Scipy's \texttt{spatial} package. After the points are generated and the nearest neighbors calculated they are saved to disk so that they can be later loaded into our CUDA code to form the differentiation matrix. This amounts to constructing and solving $n$ systems of the form
+	$$
+	\begin{bmatrix}
+	A &P\\
+	P^T &0
+	\end{bmatrix}
+	\begin{bmatrix}
+	\mathbf{w}\\
+	\mathbf{v}
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+	\mathbf{b}\\
+	\mathbf{c}
+	\end{bmatrix},
+	$$
+	
+	\noindent as described in section \ref{sec_overview_rbffd}. For computational convenience we instead use polynomial basis terms centered at the stencil center. This is convenient because when we evaluate the vector $\vec{c}$ almost all of the entries vanish. The only remaining are $Lx^2\vert_{\vec{x}=\vec{0}} = 2$ and $Ly^2\vert_{\vec{x}=\vec{0}} = 2$.
+	
+	In order to do this efficiently on the GPU we need the host to allocate all the memory the GPU kernels will need in advance for constructing and solving the systems. 
+	
+	\begin{lstlisting}
+cudaMalloc((void**)&full_mat1_root, 
+		n*(l_max+pdim)*(l_max+pdim) * sizeof(double));
+cudaMalloc((void**)&RHS1_root, 
+		n*(l_max+pdim) * sizeof(double));
+	\end{lstlisting}
+	
+	\noindent After the points and nearest neighbors are copied to the device it then uses the thread ID to point to that thread's portion of the array before calling the device functions to construct and solve the system.
+	
+	\begin{lstlisting}
+double* full_mat1 = &full_mat1_root[my_id * (l+pdim)*(l+pdim)];
+double* RHS1 = &RHS1_root[my_id * (l+pdim)];
+double* weights = &weights_root[my_id * (l+pdim)];
+	\end{lstlisting}
+	
+	We elected to use Gaussian Elimination without pivoting to solve each system. The systems will be small enough that this can be done relatively quickly, and we avoided pivoting to reduce warp divergence. 
+	
+	Once the weights are calculated they are copied back to the host to be written to disk along with the nearest neighbors matrix which serves to index the weights.
+	
+	The serial implementation in python solves these systems directly as well using Scipy's \texttt{linalg} package. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Solving the Sparse System}
 
-	Solving the resulting sparse linear system is the most computationally expensive step in the method. The simplest method is to use Gaussian Elimination which is $\mathcal{O}(n^3)$ in general. While this can be improved by taking advantage of the sparsity, iterative methods will be faster for large matrices.
+	Solving the resulting sparse linear system is the most computationally expensive step in the method. The simplest method is to use Gaussian Elimination which is $\mathcal{O}(N^3)$ in general. While this can be improved by taking advantage of the sparsity, iterative methods will be faster for large matrices.
+	
+	The first two iterative methods to consider are the fixed point Jacobi and Gauss-Seidel methods. We have experimentally verified that our differentiation matrices can have eigenvalues very large in magnitude. This violates the convergence criterion for the fixed point methods that the spectral radius is less than one. Indeed testing shows that the Jacobi method diverged. 
+	
+	The ideal choice would be to use conjugate gradient. It is simple to implement and has very fast convergence. Unfortunately our matrices are not symmetric positive definite (SPD) so conjugate gradient fails. One can artificially force the system $D\vec{u}=\vec{b}$ to be SPD by multiplying by the transpose to get $D^TD\vec{u} = D^T \vec{b}$. Here the matrix $D^TD$ is symmetric positive definite and thus conjugate gradient can be used to solve for $\vec{u}$. The drawback here is that the condition number is greatly increased since $\kappa(D^TD) = \kappa(D)^2$. This has the potential to limit accuracy and is further discussed in section \ref{sec_results}. 
+	
+	The Stabilized Bi-Conjugate Gradient method (BiCGSTAB) is a variation on conjugate gradient that in theory converges for any matrix. The convergence may be irregular though. It is common to use the incomplete LU as a preconditioner to stabilize the method. In testing BiCGSTAB failed to converge for our matrices unless they had a sufficient preconditioner. 
+	
+	Lastly we discuss the Generalized Minimum Residual method (GMRES). GMRES is guaranteed to converge. This was confirmed for several large test matrices generated from RBF-FD stencils. While GMRES did not need preconditioning to converge it was found that for sufficiently large problems the incomplete LU preconditioner made convergence quicker.
+	
+	In our final implementation we used Scipy's sparse solver for matrices smaller than $400 \times 400$ and used GMRES with an incomplete LU preconditioner for larger matrices.
 
-	\begin{itemize}
-		\item Gaussian Elimination
-		\item Jacobi
-		\item Gauss-Seidel
-		\item Conjugate Gradient
-		\item BiCGSTAB
-		\item GMRES
-	\end{itemize}
+%	\begin{tabular}{|c|c|}
+%		Gaussian Elimination & Slow for large systems. \\
+%		Jacobi & Spectral radius may be too large and thus it fails to converge. \\
+%		Gauss-Seidel & Spectral radius may be too large and thus it fails to converge. \\
+%		Conjugate Gradient & The matrix is not SPD. Forcing the system to be SPD squares the condition number.  \\
+%		BiCGSTAB & Fails without a decent preconditioner such as the ILU. \\
+%		GMRES & Very robust. Convergence is quicker with ILU preconditioning. 
+%	\end{tabular}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Results}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results} \label{sec_results}
 
+	For classical finite differences on two dimensional problems their error is given by $\mathcal{O}(h^2)$. Since we do not have a mesh nor an obvious step size this is an inconvenient comparison. Since the number of points is given by roughly $N \approx \pi \frac{1}{h^2}$ this error is equivalent to $\mathcal{O}(N^{-1})$. As stated in Bayona et al. \cite{Flyer2017-2} the rate of convergence of RBF-FD with polyharmonic spline (PHS) RBFs is determined by the degree of the polynomial basis terms. 
+	
+	We tested this on the problem of the homogeneous steady state heat distribution over the unit disk where the prescribed temperature is given by 
+	$$f(\theta) = \cos(2\theta) + \frac{1}{3}\sin(3\theta) + \frac{1}{20}\cos(5\theta)$$
+	\noindent for which the analytic solution is known. The convergence rates can be seen figure \ref{convergence_cg}. The top left figure shows the maximum error versus the number of interior points for each degree included in the polynomial basis terms. The stencil sizes were chosen to be twice the number of terms in the polynomial basis (minimum 10). When we include up to 3\textsuperscript{rd} degree polynomial terms we achieve $\mathcal{O}(N^{-1})$ convergence on the error. Adding terms of degree 4 we achieve $\mathcal{O}(N^{-1.8})$. Going up to degree 6 the accuracy of the method becomes limited by the condition number of the matrix. 
+	
+	We also tested our prediction that using conjugate gradient on the system $D^TD \vec{u}=D^T \vec{b}$ would result in worse accuracy since $\kappa(D^TD) = \kappa(D)^2$. The results can be seen in figure \ref{convergence_cg}. As expected it had little effect on the lower order stencils, but the degree 5 stencil (for which the error is immediately dominated by the condition number) lost accuracy much more quickly. 
+	
+	\begin{figure}[ht]
+		\centering
+		\begin{tabular}{cc}
+			\includegraphics[width=.5\textwidth]{Convergence_GMRES.eps} & \includegraphics[width=.5\textwidth]{Convergence_Transpose.eps}
+		\end{tabular}
+		\caption{Convergence rates using GMRES on $D\vec{u}=\vec{b}$ vs CG on $D^TD\vec{u}=D^T\vec{b}$ with a stencil size equal to twice the number of polynomial basis terms (minimum of ten).}
+		\label{convergence_cg}
+	\end{figure}
+	
+	Our testing of different point sets was inconclusive. Convergence of several point sets can be seen in figure \ref{convergence_points}. Some were better for smaller numbers of points, but otherwise it seems hard to know in advance which points are best.
+	\begin{figure}[ht]
+		\centering
+		\begin{tabular}{cc}
+			\includegraphics[width=.5\textwidth]{Convergence_halton.eps} & \includegraphics[width=.5\textwidth]{convergence_vogel.eps} \\
+			\includegraphics[width=.5\textwidth]{Convergence_random.eps} & \includegraphics[width=.5\textwidth]{Convergence_grid.eps} \\
+		\end{tabular}
+		\caption{Convergence for different point sets.}
+		\label{convergence_points}
+	\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions and Future Work}
 
